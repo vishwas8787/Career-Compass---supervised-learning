@@ -73,93 +73,88 @@ def validate_ratings(ratings, label):
 
 
 def calculate_interest_scores(profiles, interests):
-    """Calculate cosine similarity between student and occupation interests."""
-    student_vector = np.zeros(len(INTEREST_COLUMNS), dtype=float)
-    occupation_vectors = []
+    """Calculate career-interest similarity scores on a 0–100 scale."""
+    interest_columns = {
+        name: column
+        for name, column in INTEREST_COLUMNS.items()
+        if name in interests
+    }
 
-    for index, name in enumerate(INTEREST_COLUMNS):
-        column = INTEREST_COLUMNS[name]
+    if not interest_columns:
+        raise ValueError("At least one interest rating is required.")
 
-        if column not in profiles.columns:
-            raise ValueError(f"Missing interest feature: {column}")
-
-        student_vector[index] = interests.get(name, 0)
-
-        occupation_vectors.append(
-            pd.to_numeric(profiles[column], errors="coerce").to_numpy()
-        )
-
-    occupation_matrix = np.column_stack(occupation_vectors)
-
-    if np.linalg.norm(student_vector) == 0:
-        raise ValueError(
-            "At least one interest rating must be above zero."
-        )
-
-    student_norm = np.linalg.norm(student_vector)
-    occupation_norms = np.linalg.norm(occupation_matrix, axis=1)
-
-    similarities = np.zeros(len(profiles), dtype=float)
-
-    valid = (
-        np.isfinite(occupation_matrix).all(axis=1)
-        & (occupation_norms > 0)
+    columns = list(interest_columns.values())
+    user_vector = np.array(
+        [interests[name] for name in interest_columns],
+        dtype=float,
     )
 
-    similarities[valid] = (
-        occupation_matrix[valid] @ student_vector
-    ) / (occupation_norms[valid] * student_norm)
+    career_matrix = profiles[columns].apply(
+        pd.to_numeric, errors="coerce"
+    ).to_numpy(dtype=float)
 
-    # Convert cosine similarity into a percentage-like score.
-    return np.clip(similarities, 0, 1) * 100
+    user_norm = np.linalg.norm(user_vector)
+    career_norms = np.linalg.norm(career_matrix, axis=1)
+
+    scores = np.zeros(len(profiles), dtype=float)
+    valid = (
+        np.isfinite(career_matrix).all(axis=1)
+        & (career_norms > 0)
+        & (user_norm > 0)
+    )
+
+    if valid.any():
+        similarities = (
+            career_matrix[valid] @ user_vector
+        ) / (career_norms[valid] * user_norm)
+
+        scores[valid] = np.clip(similarities, 0, 1) * 100
+
+    return pd.Series(scores, index=profiles.index)
 
 
 def calculate_skill_scores(profiles, skills):
-    """
-    Estimate skill fit using only skills the student actually rated.
-
-    O*NET importance is not a direct proficiency requirement, so this
-    is a heuristic rather than a calibrated measure of skill readiness.
-    """
+    """Score how well the user's skills meet career requirements."""
     if not skills:
-        return np.full(len(profiles), 50.0)
+        return pd.Series(0.0, index=profiles.index)
 
-    skill_columns = {}
+    skill_columns = {
+        f"skill_{name.strip()}": rating
+        for name, rating in skills.items()
+        if f"skill_{name.strip()}" in profiles.columns
+    }
 
-    for name, value in skills.items():
-        column = f"skill_{name.strip()}"
+    if not skill_columns:
+        return pd.Series(0.0, index=profiles.index)
 
-        if column not in profiles.columns:
-            raise ValueError(
-                f"Unknown skill '{name}'. Use an exact O*NET skill name."
-            )
+    columns = list(skill_columns.keys())
 
-        skill_columns[column] = value
-
-    gaps = []
-
-    for column, student_level in skill_columns.items():
-        occupation_importance = pd.to_numeric(
-            profiles[column], errors="coerce"
-        ).to_numpy()
-
-        # Both values are compared on an approximate 0-5 scale.
-        gap = np.abs(occupation_importance - student_level) / 5
-        gaps.append(np.clip(gap, 0, 1))
-
-    gap_matrix = np.column_stack(gaps)
-
-    # Do not interpret missing occupation ratings as zero.
-    valid_counts = np.isfinite(gap_matrix).sum(axis=1)
-
-    mean_gaps = np.divide(
-        np.nansum(gap_matrix, axis=1),
-        valid_counts,
-        out=np.ones(len(profiles), dtype=float),
-        where=valid_counts > 0,
+    user_vector = np.array(
+        [skill_columns[column] for column in columns],
+        dtype=float,
     )
 
-    return (1 - mean_gaps) * 100
+    career_matrix = profiles[columns].apply(
+        pd.to_numeric, errors="coerce"
+    ).to_numpy(dtype=float)
+
+    valid = np.isfinite(career_matrix).all(axis=1)
+    scores = np.zeros(len(profiles), dtype=float)
+
+    if valid.any():
+        requirements = career_matrix[valid]
+
+        # Penalize only the amount by which the user's skill
+        # rating falls below the occupation's requirement.
+        gaps = np.maximum(requirements - user_vector, 0)
+
+        mean_gap = gaps.mean(axis=1)
+
+        scores[valid] = (
+            1 - mean_gap / 5.0
+        ).clip(0, 1) * 100
+
+    return pd.Series(scores, index=profiles.index)
 
 
 def select_diverse_careers(results, top_n=5, max_per_group=2):
@@ -291,17 +286,17 @@ def main():
 
     interests = {
         "realistic": 0,
-        "investigative": 0,
+        "investigative": 5,
         "artistic": 0,
-        "social": 5,
+        "social": 0,
         "enterprising": 0,
         "conventional": 0,
     }
 
     skills = {
-        "Critical Thinking": 4,
-        "Mathematics": 3,
-        "Writing": 3,
+        "Critical Thinking": 1,
+        "Mathematics": 1,
+        "Writing": 1,
     }
 
     recommendations = recommend_careers(

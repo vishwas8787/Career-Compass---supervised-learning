@@ -65,45 +65,41 @@ def validate_student_skills(student_skills):
     return validated
 
 
-def get_skill_gaps(occupation, student_skills, top_n=5):
-    """Compare only skills the student actually rated."""
-    validated_skills = validate_student_skills(student_skills)
+
+def get_skill_gaps(occupation, student_skills):
+    """Compare rated student skills with occupation requirements."""
     gaps = []
 
-    for column in occupation.index:
-        if not column.startswith("skill_"):
+    for skill_name, student_rating in student_skills.items():
+        column = f"skill_{skill_name}"
+
+        if column not in occupation.index:
             continue
 
-        skill_name = column[len("skill_"):]
+        requirement = occupation[column]
 
-        # Never assume an unreported skill has a rating of zero.
-        if skill_name.casefold() not in validated_skills:
+        # Ignore missing occupation requirements.
+        if pd.isna(requirement):
             continue
 
-        original_name, current_level = validated_skills[
-            skill_name.casefold()
-        ]
-
-        try:
-            importance = float(occupation[column])
-        except (TypeError, ValueError):
-            continue
-
-        if pd.isna(importance):
-            continue
-
-        gap = max(0.0, importance - current_level)
+        current = float(student_rating)
+        required = float(requirement)
+        gap = max(required - current, 0.0)
 
         if gap > 0:
             gaps.append({
                 "skill": skill_name,
-                "current": current_level,
-                "importance": importance,
+                "current": current,
+                "importance": required,
                 "gap": gap,
             })
 
-    gaps.sort(key=lambda item: item["gap"], reverse=True)
-    return gaps[:top_n]
+    gaps.sort(
+    key=lambda item: item["gap"] * item["importance"],
+    reverse=True,
+)
+
+    return gaps
 
 
 def get_project_suggestions(title):

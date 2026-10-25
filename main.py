@@ -56,26 +56,35 @@ def get_interests():
     return selected
 
 
+
 def get_skills():
     print("\nRate your current skills from 0 to 5.")
     print("0 = No experience, 5 = Very proficient")
+    print("Press Enter to skip a skill you haven't assessed.")
 
     skills = {}
 
     for name in SKILL_NAMES:
         while True:
+            raw_value = input(f"{name} (0-5, Enter to skip): ").strip()
+
+            if raw_value == "":
+                break
+
             try:
-                value = float(input(f"{name} (0-5): "))
+                value = float(raw_value)
 
                 if 0 <= value <= 5:
                     skills[name] = value
                     break
 
-                print("Enter a number between 0 and 5.")
+                print("Enter a number between 0 and 5, or press Enter to skip.")
+
             except ValueError:
-                print("Please enter a valid number.")
+                print("Please enter a valid number, or press Enter to skip.")
 
     return skills
+
 
 
 def main():
