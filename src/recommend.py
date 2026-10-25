@@ -15,8 +15,8 @@ DATA_FILE = (
 MODEL_FILE = PROJECT_ROOT / "models" / "job_zone_model.joblib"
 
 # Initial ranking weights; we'll evaluate these later.
-INTEREST_WEIGHT = 0.60
-SKILL_WEIGHT = 0.40
+INTEREST_WEIGHT = 0.80
+SKILL_WEIGHT = 0.20
 
 INTEREST_COLUMNS = {
     "realistic": "interest_Realistic",
@@ -44,7 +44,12 @@ def load_resources():
     profiles = pd.read_csv(DATA_FILE)
     saved = joblib.load(MODEL_FILE)
 
-    return profiles, saved["model"], saved["feature_columns"]
+    return (
+    profiles,
+    saved["model"],
+    saved["feature_columns"],
+    saved.get("zone3_threshold", 1.01),
+)
 
 
 def validate_ratings(ratings, label):
@@ -157,25 +162,71 @@ def calculate_skill_scores(profiles, skills):
     return (1 - mean_gaps) * 100
 
 
+def select_diverse_careers(results, top_n=5, max_per_group=2):
+    """Select high-scoring careers while limiting same-group repetition."""
+    results = results.copy()
+
+    # O*NET-SOC major groups are represented by the first two digits
+    # of the occupation code, e.g. 15 = Computer and Mathematical.
+    results["Major Group"] = (
+        results["O*NET-SOC Code"]
+        .astype(str)
+        .str.extract(r"^(\d{2})", expand=False)
+    )
+
+    selected_indices = []
+    group_counts = {}
+
+    # First pass: respect the group limit.
+    for index, row in results.iterrows():
+        group = row["Major Group"]
+
+        if group is None or pd.isna(group):
+            group = "Unknown"
+
+        if group_counts.get(group, 0) >= max_per_group:
+            continue
+
+        selected_indices.append(index)
+        group_counts[group] = group_counts.get(group, 0) + 1
+
+        if len(selected_indices) >= top_n:
+            break
+
+    # Fallback: fill remaining places if the group limit leaves gaps.
+    if len(selected_indices) < min(top_n, len(results)):
+        for index in results.index:
+            if index not in selected_indices:
+                selected_indices.append(index)
+
+            if len(selected_indices) >= min(top_n, len(results)):
+                break
+
+    return (
+        results.loc[selected_indices]
+        .drop(columns=["Major Group"])
+        .reset_index(drop=True)
+    )
+
+
+
 def recommend_careers(interests, skills=None, top_n=5):
     """Rank occupations using interest and skill similarity."""
-    profiles, model, model_features = load_resources()
+    profiles, model, model_features, zone3_threshold = load_resources()
 
     interests = {
         name.strip().lower(): value
         for name, value in interests.items()
     }
-
     skills = skills or {}
 
     interests = validate_ratings(interests, "Interest")
     skills = validate_ratings(skills, "Skill")
 
-    if not isinstance(top_n, int) or top_n < 1:
+    if not isinstance(top_n, int) or isinstance(top_n, bool) or top_n < 1:
         raise ValueError("top_n must be a positive integer.")
 
     unknown_interests = set(interests) - set(INTEREST_COLUMNS)
-
     if unknown_interests:
         raise ValueError(
             f"Unknown interests: {', '.join(sorted(unknown_interests))}"
@@ -184,7 +235,6 @@ def recommend_careers(interests, skills=None, top_n=5):
     interest_scores = calculate_interest_scores(profiles, interests)
     skill_scores = calculate_skill_scores(profiles, skills)
 
-    # Combine normalized components using explicit weights.
     if skills:
         match_scores = (
             INTEREST_WEIGHT * interest_scores
@@ -194,19 +244,27 @@ def recommend_careers(interests, skills=None, top_n=5):
         match_scores = interest_scores
 
     # Predict Job Zone independently of the career match score.
-    X = profiles[model_features].apply(
-        pd.to_numeric, errors="coerce"
-    )
-
+    X = profiles[model_features].apply(pd.to_numeric, errors="coerce")
     valid_rows = X.notna().all(axis=1)
-
     predicted_zones = np.full(len(profiles), np.nan)
 
     if valid_rows.any():
-        predicted_zones[valid_rows.to_numpy()] = model.predict(
-            X.loc[valid_rows]
-        )
+        X_valid = X.loc[valid_rows]
+        probabilities = model.predict_proba(X_valid)
+        classes = model.classes_
 
+        predictions = classes[np.argmax(probabilities, axis=1)]
+
+        zone3_positions = np.flatnonzero(classes == 3)
+
+        if len(zone3_positions) > 0 and zone3_threshold <= 1.0:
+            zone3_position = zone3_positions[0]
+            zone3_probabilities = probabilities[:, zone3_position]
+            predictions[zone3_probabilities >= zone3_threshold] = 3
+
+        predicted_zones[valid_rows.to_numpy()] = predictions
+
+    # Build results regardless of whether any valid model rows exist.
     results = profiles[
         ["O*NET-SOC Code", "Title", "Job Zone"]
     ].copy()
@@ -216,23 +274,28 @@ def recommend_careers(interests, skills=None, top_n=5):
     results["Match Score (%)"] = match_scores
     results["Predicted Job Zone"] = predicted_zones
 
-    return (
-        results.sort_values("Match Score (%)", ascending=False)
-        .head(min(top_n, len(results)))
-        .reset_index(drop=True)
+    results = results.sort_values(
+        "Match Score (%)", ascending=False
+    ).reset_index(drop=True)
+
+    return select_diverse_careers(
+        results,
+        top_n=top_n,
+        max_per_group=2,
     )
+
 
 
 def main():
     print("CAREERCOMPASS - CAREER RECOMMENDATIONS")
 
     interests = {
-        "investigative": 5,
-        "realistic": 2,
-        "artistic": 3,
-        "social": 1,
-        "enterprising": 2,
-        "conventional": 3,
+        "realistic": 0,
+        "investigative": 0,
+        "artistic": 0,
+        "social": 5,
+        "enterprising": 0,
+        "conventional": 0,
     }
 
     skills = {
