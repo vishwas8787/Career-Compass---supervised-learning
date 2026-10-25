@@ -103,7 +103,7 @@ def main():
             print(
                 f"{index + 1}. {row['Title']}"
                 f" | Job Zone: {row['Job Zone']}"
-                f" | Match Score: {row['Match Score']:.3f}"
+                f" | Match Score: {row['Match Score (%)']:.2f}%"
             )
 
         while True:
