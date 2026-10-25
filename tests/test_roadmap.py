@@ -56,9 +56,7 @@ class TestRoadmapEngine(unittest.TestCase):
         self.assertIn("importance", areas[0])
 
     def test_get_course_roadmap(self):
-        knowledge = [{"name": "Computers and Electronics", "importance": 4.5}]
-        gaps = [{"skill": "Mathematics", "recommended_course": "MATH 100: Quantitative Problem Solving"}]
-        roadmap = get_course_roadmap(knowledge, gaps, job_zone=4)
+        roadmap = get_course_roadmap("COMPUTER_AND_IT", job_zone=4)
 
         self.assertIn("stage_1_foundational", roadmap)
         self.assertIn("stage_2_core", roadmap)

@@ -1,7 +1,8 @@
 """
 Roadmap generation module for CareerCompass.
-Generates multi-step roadmaps (Courses -> Skills -> Projects -> Career)
-tailored to student ratings and O*NET occupational profiles.
+Generates multi-step, domain-specific educational roadmaps:
+(Courses -> Skills -> Projects -> Career)
+Course: CSE395 Supervised Learning
 """
 
 from pathlib import Path
@@ -12,359 +13,299 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROFILES_FILE = PROJECT_ROOT / "data" / "processed" / "occupation_profiles.csv"
 FEATURES_FILE = PROJECT_ROOT / "data" / "processed" / "occupation_features.csv"
 
-# Comprehensive Course Mapping Knowledge Base for O*NET Knowledge Domains
-COURSE_CATALOG = {
-    "Computers and Electronics": {
+
+# ==============================================================================
+# DOMAIN-SPECIFIC CURRICULUM CATALOGS (NO VENDOR/LANGUAGE VERSIONS OR CODE CODES)
+# ==============================================================================
+
+DOMAIN_CURRICULA = {
+    "ARTS_AND_DESIGN": {
         "foundational": [
-            "CS 101: Introduction to Computer Science & Programming (Python)",
-            "CS 102: Digital Logic and Computer Architecture",
+            "Observational Drawing, Perspective & Composition",
+            "Color Theory and Visual Principles",
+            "Art History & Aesthetic Movements",
+            "Studio Materials & Media Techniques",
         ],
         "core": [
-            "CS 201: Data Structures and Algorithms",
-            "CS 205: Database Systems & SQL",
-            "CS 210: Operating Systems & Computer Networking",
+            "Studio Painting & Sculptural Techniques",
+            "Digital Illustration & Visual Storytelling",
+            "Figure Drawing and Anatomical Studies",
+            "Printmaking & Mixed Media Expression",
         ],
         "advanced": [
-            "CS 301: Machine Learning & Intelligent Systems",
-            "CS 305: Cloud Computing & Distributed Architecture",
-            "CS 315: Software Engineering & Agile Development",
+            "Advanced Studio Practice & Conceptual Art",
+            "Visual Development & Gallery Curation",
+            "Capstone Creative Portfolio & Exhibition",
         ],
         "certifications": [
-            "AWS Certified Solutions Architect / Cloud Practitioner",
-            "CompTIA Security+ / Network+",
+            "Professional Fine Arts Portfolio Accreditation",
+            "Studio Artist Residency Credential",
         ],
     },
-    "Mathematics": {
+    "GAME_DESIGN": {
         "foundational": [
-            "MATH 101: Differential and Integral Calculus",
-            "MATH 105: Discrete Mathematics",
+            "Visual Design Fundamentals & Color Theory",
+            "Game Mechanics & Interactive Storytelling",
+            "2D Asset Creation & Animation",
+            "Mathematics for Computer Graphics",
         ],
         "core": [
-            "MATH 201: Linear Algebra and Matrix Theory",
-            "STAT 202: Probability Theory & Applied Statistics",
+            "3D Asset Modeling & Texture Mapping",
+            "Game Engine Architecture & Interactive Scripting",
+            "Level Design & Player Experience",
+            "Audio Design & Environmental Foley",
         ],
         "advanced": [
-            "MATH 301: Numerical Analysis & Optimization Methods",
-            "STAT 305: Multivariate Statistical Modeling",
+            "Systems Design & Gameplay Balancing",
+            "Interactive Physics & Real-Time Simulation",
+            "Capstone Playable Game Prototype",
         ],
         "certifications": [
-            "Certified Analytics Professional (CAP)",
-            "Applied Data Science with Python (Specialization)",
+            "Professional Game Design & Engine Certification",
+            "Interactive Media Systems Credential",
         ],
     },
-    "Design": {
+    "COMPUTER_AND_IT": {
         "foundational": [
-            "DSGN 101: Fundamentals of Visual Design and Composition",
-            "DSGN 105: Human-Centered Design Principles",
+            "Computer Programming Fundamentals",
+            "Discrete Mathematics",
+            "Digital Logic and Computer Architecture",
+            "Linear Algebra and Numerical Methods",
         ],
         "core": [
-            "DSGN 201: UI/UX Wireframing & Interactive Prototyping (Figma)",
-            "DSGN 205: Information Architecture & Usability Testing",
+            "Data Structures and Algorithms",
+            "Database Systems & Structured Query Language",
+            "Operating Systems & Computer Networking",
+            "Probability Theory and Applied Statistics",
         ],
         "advanced": [
-            "DSGN 301: Design Systems, Micro-Interactions & Accessibility",
-            "DSGN 305: 3D Asset Modeling & Interactive Motion Graphics",
+            "Machine Learning & Pattern Recognition",
+            "Cloud Infrastructure & Distributed Systems",
+            "Software Engineering & Agile Methodologies",
         ],
         "certifications": [
-            "Google UX Design Professional Certificate",
-            "Nielsen Norman Group UX Master Certified",
+            "Cloud Infrastructure Solutions Architect Certification",
+            "Applied Data Science & Machine Learning Credential",
         ],
     },
-    "Engineering and Technology": {
+    "HEALTHCARE_AND_MEDICAL": {
         "foundational": [
-            "ENGR 101: Engineering Mechanics & Statics",
-            "ENGR 105: Computer-Aided Design (CAD) & Rapid Prototyping",
+            "General Biology with Laboratory",
+            "Human Anatomy and Physiology",
+            "Medical Terminology & Healthcare Ethics",
+            "General Chemistry & Laboratory Safety",
         ],
         "core": [
-            "ENGR 201: Circuit Analysis & Embedded Systems",
-            "ENGR 205: Materials Science & Engineering Thermodynamics",
+            "General Pathophysiology & Disease Mechanisms",
+            "Biochemistry & Cellular Mechanisms",
+            "Health Information Systems & Electronic Records",
+            "Biostatistics and Research Methodology",
         ],
         "advanced": [
-            "ENGR 301: Control Systems, Automation & Robotics",
-            "ENGR 305: Systems Engineering & Reliability Analysis",
+            "Clinical Epidemiology & Evidence-Based Practice",
+            "Principles of Pharmacology & Diagnostics",
+            "Healthcare Quality Management & Patient Safety",
         ],
         "certifications": [
-            "Fundamentals of Engineering (FE) Certification",
-            "SolidWorks Certified Professional (CSWP)",
+            "Certified Healthcare Information & Management Credential",
+            "Clinical Specialist Certification",
         ],
     },
-    "Biology": {
+    "BUSINESS_AND_FINANCE": {
         "foundational": [
-            "BIO 101: General Biology & Laboratory Techniques",
-            "BIO 105: Cellular and Molecular Biology",
+            "Principles of Microeconomics and Macroeconomics",
+            "Financial Accounting Principles",
+            "Business Communication & Professional Ethics",
+            "Business Mathematics and Applied Statistics",
         ],
         "core": [
-            "BIO 201: Genetics, Heredity & Genomics",
-            "BIO 205: Microbiology & Immunology",
+            "Managerial Accounting & Corporate Finance",
+            "Quantitative Business Analytics & Forecasting",
+            "Operations and Project Management",
+            "Organizational Behavior and Leadership",
         ],
         "advanced": [
-            "BIO 301: Bioinformatics & Computational Genomics",
-            "BIO 305: Molecular Biotechnology & Genetic Engineering",
+            "Financial Modeling & Investment Analysis",
+            "Strategic Management & Market Analysis",
+            "Corporate Governance & Regulatory Compliance",
         ],
         "certifications": [
-            "Bioinformatics Specialization (Coursera/UCSD)",
-            "Certified Clinical Research Associate (CCRA)",
+            "Financial Modeling and Valuation Credential",
+            "Project Management Certification (PMP/CAPM)",
         ],
     },
-    "Medicine and Dentistry": {
+    "ENGINEERING_AND_TECH": {
         "foundational": [
-            "MED 101: Human Anatomy and Physiology I & II",
-            "MED 105: Medical Terminology & Healthcare Ethics",
+            "Engineering Mechanics & Statics",
+            "Computer-Aided Design (CAD) & Drafting",
+            "Differential Equations and Applied Calculus",
+            "General Physics & Laboratory Techniques",
         ],
         "core": [
-            "MED 201: General Pathophysiology & Disease Mechanisms",
-            "MED 205: Principles of Pharmacology & Diagnostics",
+            "Materials Science & Engineering Thermodynamics",
+            "Circuit Analysis & Instrumentation",
+            "Fluid Mechanics and Heat Transfer",
+            "Engineering Statistics & Quality Control",
         ],
         "advanced": [
-            "MED 301: Clinical Epidemiology & Evidence-Based Practice",
-            "MED 305: Health Informatics & Electronic Health Records",
+            "Control Systems & Industrial Automation",
+            "Systems Engineering & Reliability Analysis",
+            "Senior Engineering Capstone Project",
         ],
         "certifications": [
-            "Certified Clinical Medical Assistant (CCMA)",
-            "Certified Healthcare Information & Management Systems (CPHIMS)",
+            "Fundamentals of Engineering (FE) Credential",
+            "Certified Computer-Aided Design Professional",
         ],
     },
-    "Economics and Accounting": {
+    "NATURAL_SCIENCE_AND_RESEARCH": {
         "foundational": [
-            "ECON 101: Principles of Microeconomics and Macroeconomics",
-            "ACCT 101: Financial Accounting Principles",
+            "General Chemistry & Biology with Laboratory",
+            "Calculus and Analytical Geometry",
+            "Scientific Inquiry & Laboratory Safety",
+            "Introduction to Scientific Computing",
         ],
         "core": [
-            "ACCT 201: Managerial Accounting & Corporate Finance",
-            "ECON 205: Intermediate Microeconomic Theory & Markets",
+            "Organic Chemistry & Molecular Biology",
+            "Applied Statistics for Scientific Research",
+            "Instrumentation & Analytical Methods",
+            "Experimental Design and Hypothesis Testing",
         ],
         "advanced": [
-            "ECON 301: Econometrics & Quantitative Financial Modeling",
-            "FIN 305: Investment Analysis & Portfolio Management",
+            "Advanced Data Analysis in Scientific Research",
+            "Computational Modeling & Simulation",
+            "Scientific Thesis and Literature Review",
         ],
         "certifications": [
-            "Chartered Financial Analyst (CFA) Level 1",
-            "Financial Risk Manager (FRM)",
+            "Certified Laboratory Research Professional",
+            "Scientific Data Analysis Credential",
         ],
     },
-    "Psychology": {
+    "EDUCATION_AND_HUMAN_SERVICES": {
         "foundational": [
-            "PSYC 101: Introduction to Psychological Science",
-            "PSYC 105: Developmental Psychology Across the Lifespan",
+            "Foundations of Education & Learning Theories",
+            "Introduction to General Psychology",
+            "Interpersonal Communication & Group Dynamics",
+            "Child and Adolescent Development",
         ],
         "core": [
-            "PSYC 201: Cognitive Psychology & Perception",
-            "PSYC 205: Research Methods & Behavioral Statistics",
+            "Instructional Design & Curriculum Development",
+            "Educational Technology & Digital Learning Tools",
+            "Assessment, Evaluation & Learning Analytics",
+            "Counseling Theories and Practical Ethics",
         ],
         "advanced": [
-            "PSYC 301: Human-Computer Interaction & Ergonomics",
-            "PSYC 305: Behavioral Economics & Decision Making",
+            "Differentiated Instruction & Universal Design",
+            "Educational Leadership and Program Evaluation",
+            "Practicum Teaching & Supervised Fieldwork",
         ],
         "certifications": [
-            "Board Certified Behavior Analyst (BCBA)",
-            "Applied Ergonomics & Human Factors Certificate",
+            "State Teaching & Instructional Credential",
+            "Certified Instructional Designer Credential",
         ],
     },
-    "Communications and Media": {
+    "GENERAL_APPLIED": {
         "foundational": [
-            "COMM 101: Introduction to Mass Communication & Media",
-            "COMM 105: Public Speaking and Strategic Rhetoric",
+            "Workplace Communication & Professional Fundamentals",
+            "Practical Quantitative Reasoning",
+            "Occupational Health, Safety & Standards",
+            "Applied Digital Tools & Information Literacy",
         ],
         "core": [
-            "COMM 201: Digital Content Production & Multimedia Storytelling",
-            "COMM 205: Technical Writing & Editing for Digital Media",
+            "Technical Operations & Practical Equipment Handling",
+            "Customer Service Principles & Problem Resolution",
+            "Quality Assurance and Process Documentation",
+            "Supervised Technical Apprenticeship",
         ],
         "advanced": [
-            "COMM 301: Media Analytics & Audience Insights",
-            "COMM 305: Crisis Communication & Public Relations Strategy",
+            "Advanced Technical Specialization & Field Operations",
+            "Team Coordination and Workflow Management",
+            "Applied Practical Capstone Assessment",
         ],
         "certifications": [
-            "HubSpot Digital Marketing & Content Marketing Certification",
-            "Google Analytics Individual Qualification (GA4)",
-        ],
-    },
-    "Administration and Management": {
-        "foundational": [
-            "MGMT 101: Principles of Management & Organizational Behavior",
-            "MGMT 105: Business Communication & Collaboration",
-        ],
-        "core": [
-            "MGMT 201: Operations and Project Management",
-            "MGMT 205: Agile & Scrum Frameworks",
-        ],
-        "advanced": [
-            "MGMT 301: Product Strategy & Roadmapping",
-            "MGMT 305: Strategic Leadership & Change Management",
-        ],
-        "certifications": [
-            "Project Management Professional (PMP) / CAPM",
-            "Professional Scrum Master I (PSM I)",
-        ],
-    },
-    "Sales and Marketing": {
-        "foundational": [
-            "MKTG 101: Principles of Marketing & Consumer Psychology",
-            "MKTG 105: Professional Sales & Communication Fundamentals",
-        ],
-        "core": [
-            "MKTG 201: Digital Marketing Strategy, SEO & SEM",
-            "MKTG 205: Marketing Analytics & Customer Lifetime Value",
-        ],
-        "advanced": [
-            "MKTG 301: Brand Identity & Growth Marketing",
-            "MKTG 305: Enterprise Account Management & CRM Systems",
-        ],
-        "certifications": [
-            "Meta Certified Digital Marketing Associate",
-            "Salesforce Certified Administrator",
-        ],
-    },
-    "Fine Arts": {
-        "foundational": [
-            "ART 101: Observational Drawing, Perspective & Composition",
-            "ART 105: Color Theory and Visual Principles",
-        ],
-        "core": [
-            "ART 201: Digital Painting & Concept Art",
-            "ART 205: 2D Animation & Storyboarding",
-        ],
-        "advanced": [
-            "ART 301: Visual Development & Art Direction for Entertainment",
-            "ART 305: Capstone Creative Portfolio & Exhibition",
-        ],
-        "certifications": [
-            "Adobe Certified Professional (Photoshop / Illustrator)",
-            "Unity Certified User: Artist",
-        ],
-    },
-    "Chemistry": {
-        "foundational": [
-            "CHEM 101: General Chemistry I & II with Laboratory",
-            "CHEM 105: Chemical Safety & Quantitative Analysis",
-        ],
-        "core": [
-            "CHEM 201: Organic Chemistry I & II",
-            "CHEM 205: Analytical Chemistry & Instrumentation",
-        ],
-        "advanced": [
-            "CHEM 301: Biochemistry & Molecular Mechanisms",
-            "CHEM 305: Physical Chemistry & Spectroscopy",
-        ],
-        "certifications": [
-            "ACS Certified Chemist Credential",
-            "Occupational Health and Safety Chemical Handling (OSHA)",
-        ],
-    },
-    "Physics": {
-        "foundational": [
-            "PHYS 101: Mechanics and Thermodynamics (Physics I)",
-            "PHYS 105: Electromagnetism and Optics (Physics II)",
-        ],
-        "core": [
-            "PHYS 201: Waves, Optics, and Modern Physics",
-            "PHYS 205: Computational Physics & Numerical Simulation",
-        ],
-        "advanced": [
-            "PHYS 301: Quantum Mechanics & Electrodynamics",
-            "PHYS 305: Statistical Mechanics & Solid State Physics",
-        ],
-        "certifications": [
-            "Computational Modeling in Physics Certificate",
-            "Certified LabVIEW Associate Developer",
-        ],
-    },
-    "Education and Training": {
-        "foundational": [
-            "EDUC 101: Foundations of Education & Learning Theories",
-            "EDUC 105: Educational Psychology & Motivation",
-        ],
-        "core": [
-            "EDUC 201: Instructional Design Principles & Curriculum Planning",
-            "EDUC 205: Educational Technology & E-Learning Tools",
-        ],
-        "advanced": [
-            "EDUC 301: Assessment, Evaluation & Learning Analytics",
-            "EDUC 305: Differentiated Instruction & Universal Design",
-        ],
-        "certifications": [
-            "Certified Instructional Designer (CID)",
-            "State Teaching Licensure / Higher Education Teaching Credential",
-        ],
-    },
-    "Law and Government": {
-        "foundational": [
-            "PLSC 101: Introduction to Political Science & Legal Systems",
-            "PLSC 105: Constitutional Law & Civil Liberties",
-        ],
-        "core": [
-            "LAW 201: Administrative Law, Governance & Public Policy",
-            "LAW 205: Intellectual Property & Data Privacy Regulations",
-        ],
-        "advanced": [
-            "LAW 301: International Law & Regulatory Compliance",
-            "LAW 305: Legal Research, Writing & Policy Negotiation",
-        ],
-        "certifications": [
-            "Certified Information Privacy Professional (CIPP)",
-            "Certified Regulatory Compliance Manager (CRCM)",
+            "Occupational Safety and Health Administration (OSHA) Credential",
+            "Vocational Specialist Credential",
         ],
     },
 }
 
-# Skill gap specific courses and practical exercises
-SKILL_DEVELOPMENT_RESOURCES = {
-    "Mathematics": {
-        "course": "MATH 100: Quantitative Problem Solving & Applied Calculus",
-        "exercise": "Solve 5 applied real-world numerical problems weekly and verify using Python/NumPy.",
-    },
-    "Critical Thinking": {
-        "course": "PHIL 102: Logic, Reasoning & Evidence-Based Argumentation",
-        "exercise": "Deconstruct a published technical paper or business case study; map assumptions vs. empirical evidence.",
-    },
-    "Active Learning": {
-        "course": "GENS 101: Self-Directed Inquiry & Knowledge Synthesis",
-        "exercise": "Pick one new framework or tool every two weeks; build a minimal proof-of-concept and write a learning summary.",
-    },
-    "Speaking": {
-        "course": "COMM 102: Professional Presentations & Pitching for Technical Topics",
-        "exercise": "Deliver a 5-minute recorded presentation on a technical topic; review pacing, slide clarity, and articulation.",
-    },
-    "Writing": {
-        "course": "WRIT 201: Technical and Professional Communication",
-        "exercise": "Draft clear GitHub documentation, design memos, and project READMEs with architecture diagrams.",
-    },
-    "Reading Comprehension": {
-        "course": "ENGL 105: Critical Literature Analysis & Research Syntheses",
-        "exercise": "Read and summarize peer-reviewed journals or standard specifications into 1-page executive briefs.",
-    },
-    "Science": {
-        "course": "SCIE 101: The Scientific Method, Hypothesis Testing & Experimental Design",
-        "exercise": "Formulate a testable hypothesis, record observations with controlled variables, and compute confidence intervals.",
-    },
-    "Active Listening": {
-        "course": "COMM 104: Interpersonal Communication & Stakeholder Empathy",
-        "exercise": "Engage in simulated stakeholder interviews, take structured notes, and confirm requirements via active playback.",
-    },
-    "Monitoring": {
-        "course": "MGMT 203: Performance Tracking, KPIs & Quality Assurance",
-        "exercise": "Establish weekly project milestones with automated metric dashboards to monitor progress against goals.",
-    },
-    "Learning Strategies": {
-        "course": "EDUC 102: Cognitive Learning Strategies & Habit Formation",
-        "exercise": "Apply spaced repetition and active recall (Feynman technique) to review core concepts twice weekly.",
-    },
-}
+
+def detect_domain(occupation_code, title):
+    """Accurately identify career domain using SOC Major Group and title keywords."""
+    soc_str = str(occupation_code).strip()
+    prefix = soc_str[:2] if len(soc_str) >= 2 else ""
+    title_cf = str(title).casefold()
+
+    # Title keyword overrides
+    if any(w in title_cf for w in ("video game", "game designer")):
+        return "GAME_DESIGN"
+
+    if any(w in title_cf for w in (
+        "artist", "painter", "sculptor", "illustrat", "craft", "actor",
+        "dancer", "music", "model", "makeup", "animator", "photograph", "curator"
+    )):
+        return "ARTS_AND_DESIGN"
+
+    if any(w in title_cf for w in (
+        "data scientist", "software", "programmer", "developer",
+        "database", "computer", "web developer", "network", "cybersecurity"
+    )):
+        return "COMPUTER_AND_IT"
+
+    if any(w in title_cf for w in (
+        "nurse", "physician", "doctor", "therapist", "dentist", "surgeon",
+        "pharmacist", "clinical", "medical", "cytotechnologist", "health informatics"
+    )):
+        return "HEALTHCARE_AND_MEDICAL"
+
+    if any(w in title_cf for w in (
+        "engineer", "engineering", "architect", "robotics", "aerospace"
+    )):
+        return "ENGINEERING_AND_TECH"
+
+    if any(w in title_cf for w in (
+        "accountant", "financial", "auditor", "economist", "banker",
+        "marketing", "business", "manager", "operations research"
+    )):
+        return "BUSINESS_AND_FINANCE"
+
+    if any(w in title_cf for w in (
+        "biologist", "chemist", "physicist", "microbiologist", "epidemiologist",
+        "astronomer", "geologist", "scientist"
+    )):
+        return "NATURAL_SCIENCE_AND_RESEARCH"
+
+    # SOC Major Group fallback
+    soc_group_mapping = {
+        "11": "BUSINESS_AND_FINANCE",
+        "13": "BUSINESS_AND_FINANCE",
+        "15": "COMPUTER_AND_IT",
+        "17": "ENGINEERING_AND_TECH",
+        "19": "NATURAL_SCIENCE_AND_RESEARCH",
+        "21": "EDUCATION_AND_HUMAN_SERVICES",
+        "23": "EDUCATION_AND_HUMAN_SERVICES",
+        "25": "EDUCATION_AND_HUMAN_SERVICES",
+        "27": "ARTS_AND_DESIGN",
+        "29": "HEALTHCARE_AND_MEDICAL",
+        "31": "HEALTHCARE_AND_MEDICAL",
+        "39": "ARTS_AND_DESIGN",
+        "41": "BUSINESS_AND_FINANCE",
+    }
+
+    return soc_group_mapping.get(prefix, "GENERAL_APPLIED")
 
 
 def load_profiles():
-    """Load occupation profiles containing O*NET requirements."""
+    """Load occupation profiles containing requirements and descriptions."""
     if PROFILES_FILE.exists():
         return pd.read_csv(PROFILES_FILE)
     if FEATURES_FILE.exists():
         return pd.read_csv(FEATURES_FILE)
 
-    raise FileNotFoundError(
-        f"Occupation profiles not found at {PROFILES_FILE} or {FEATURES_FILE}."
-    )
+    raise FileNotFoundError("Occupation profiles dataset not found.")
 
 
 def find_occupation(profiles, occupation_code=None, title=None):
-    """Find an occupation by its O*NET code or title."""
+    """Find an occupation by its code or title."""
     if occupation_code is not None:
         matches = profiles[
             profiles["O*NET-SOC Code"].astype(str) == str(occupation_code)
@@ -378,9 +319,7 @@ def find_occupation(profiles, occupation_code=None, title=None):
         raise ValueError("Provide an occupation code or title.")
 
     if matches.empty:
-        raise ValueError(
-            f"Occupation not found for code='{occupation_code}', title='{title}'."
-        )
+        raise ValueError(f"Occupation '{occupation_code or title}' not found.")
 
     return matches.iloc[0]
 
@@ -396,42 +335,90 @@ def validate_student_skills(student_skills):
             raise ValueError(f"Skill rating for '{name}' must be numeric.")
 
         if not 0 <= rating <= 5:
-            raise ValueError(
-                f"Skill rating for '{name}' must be between 0 and 5."
-            )
+            raise ValueError(f"Skill rating for '{name}' must be between 0 and 5.")
 
         validated[name.strip()] = rating
 
     return validated
 
 
-def get_skill_gaps(occupation, student_skills):
-    """Rank skill gaps using the occupation's actual O*NET requirements."""
+def get_skill_gaps(occupation, student_skills, domain="GENERAL_APPLIED"):
+    """Rank skill gaps and provide domain-appropriate actionable exercises."""
     gaps = []
     occupation_columns = {
-        str(column).casefold(): column for column in occupation.index
+        str(col).casefold(): col for col in occupation.index
     }
+
+    # Domain-aware skill development exercises
+    domain_exercises = {
+        "ARTS_AND_DESIGN": {
+            "Speaking": "Deliver an articulate 5-minute artist talk explaining the concept and inspiration behind your work.",
+            "Writing": "Author a professional artist statement and exhibition catalog notes describing your creative process.",
+            "Critical Thinking": "Critique classical and contemporary artwork to evaluate aesthetic choices and visual rhetoric.",
+            "Active Learning": "Study and replicate techniques from established studio masters; document creative insights.",
+            "Active Listening": "Participate in formal studio critique sessions, gather peer feedback, and apply revisions.",
+            "Mathematics": "Apply geometric proportions, perspective scaling, and composition grids in studio work.",
+            "Reading Comprehension": "Read historical art analyses and exhibition reviews to expand contextual visual literacy.",
+            "Science": "Explore material science of pigments, mediums, and curing processes used in studio art.",
+            "Monitoring": "Track iterative stages of each artwork from preliminary sketch to final framed presentation.",
+            "Learning Strategies": "Maintain a daily visual sketchbook to practice deliberate mark-making and composition.",
+        },
+        "COMPUTER_AND_IT": {
+            "Speaking": "Deliver an articulate technical presentation explaining system architecture to peer engineers.",
+            "Writing": "Author clear technical documentation, API specifications, and architectural design memos.",
+            "Critical Thinking": "Deconstruct complex algorithmic problems and analyze time and space complexity tradeoffs.",
+            "Active Learning": "Build a proof-of-concept prototype when exploring a new framework or technology stack.",
+            "Active Listening": "Conduct requirements-gathering sessions with users and translate feedback into tickets.",
+            "Mathematics": "Solve applied linear algebra and discrete probability problems using computational scripts.",
+            "Reading Comprehension": "Read technical whitepapers and system RFCs to evaluate architectural design choices.",
+            "Science": "Formulate testable performance hypotheses, measure latencies, and profile bottlenecks.",
+            "Monitoring": "Implement automated testing and application telemetry to monitor operational reliability.",
+            "Learning Strategies": "Conduct weekly code reviews and spaced repetition on algorithmic problem patterns.",
+        },
+        "HEALTHCARE_AND_MEDICAL": {
+            "Speaking": "Practice patient communication and multidisciplinary case presentations during rounds.",
+            "Writing": "Document structured clinical notes, diagnostic evaluations, and evidence-based summaries.",
+            "Critical Thinking": "Evaluate differential diagnoses and weigh clinical evidence against diagnostic guidelines.",
+            "Active Learning": "Review recent peer-reviewed medical publications to remain updated on clinical protocols.",
+            "Active Listening": "Engage in patient interviews with empathetic listening to elicit complete medical histories.",
+            "Mathematics": "Calculate clinical dosage adjustments, statistical efficacy ratios, and patient metrics.",
+            "Reading Comprehension": "Analyze peer-reviewed medical literature and clinical trial protocols.",
+            "Science": "Investigate underlying pathophysiological mechanisms and pharmacological pathways.",
+            "Monitoring": "Track patient vital trajectories and clinical milestones against established care pathways.",
+            "Learning Strategies": "Use structured case-based learning to review clinical diagnostic algorithms.",
+        },
+    }
+
+    fallback_exercises = {
+        "Speaking": "Deliver a structured 5-minute presentation explaining core domain topics to colleagues.",
+        "Writing": "Draft clear professional summaries and documentation outlining processes and results.",
+        "Critical Thinking": "Analyze underlying assumptions, evaluate empirical evidence, and identify risks.",
+        "Active Learning": "Identify an emerging methodology in your field and complete a guided practical study.",
+        "Active Listening": "Engage in structured stakeholder discussions, confirm understanding, and summarize action items.",
+        "Mathematics": "Apply quantitative reasoning and numerical problem solving to practical workplace tasks.",
+        "Reading Comprehension": "Review professional publications and synthesize key insights into concise briefs.",
+        "Science": "Formulate hypotheses, track controlled variables, and interpret experimental data.",
+        "Monitoring": "Set key milestone targets and evaluate ongoing progress against defined quality standards.",
+        "Learning Strategies": "Apply active recall and structured practice routines to master essential techniques.",
+    }
+
+    chosen_exercises = domain_exercises.get(domain, fallback_exercises)
 
     for skill_name, student_rating in student_skills.items():
         key = f"skill_{skill_name}".casefold()
-        column = occupation_columns.get(key)
-
-        if column is None:
+        col = occupation_columns.get(key)
+        if col is None:
             continue
 
-        requirement = pd.to_numeric(occupation[column], errors="coerce")
+        requirement = pd.to_numeric(occupation[col], errors="coerce")
         if pd.isna(requirement):
             continue
 
         requirement = float(requirement)
         gap = max(requirement - student_rating, 0.0)
 
-        resource = SKILL_DEVELOPMENT_RESOURCES.get(
-            skill_name,
-            {
-                "course": f"Applied Practice in {skill_name}",
-                "exercise": f"Engage in structured practice addressing {skill_name}.",
-            },
+        exercise = chosen_exercises.get(
+            skill_name, fallback_exercises.get(skill_name, f"Engage in structured practice addressing {skill_name}.")
         )
 
         if gap > 0:
@@ -441,8 +428,7 @@ def get_skill_gaps(occupation, student_skills):
                 "importance": requirement,
                 "gap": round(gap, 2),
                 "priority": round(gap * requirement, 3),
-                "recommended_course": resource["course"],
-                "actionable_exercise": resource["exercise"],
+                "actionable_exercise": exercise,
             })
 
     gaps.sort(key=lambda item: item["priority"], reverse=True)
@@ -450,7 +436,7 @@ def get_skill_gaps(occupation, student_skills):
 
 
 def get_knowledge_areas(occupation, top_n=5):
-    """Identify the occupation's highest-rated O*NET knowledge areas."""
+    """Identify the occupation's highest-rated knowledge areas."""
     areas = []
 
     for column in occupation.index:
@@ -471,78 +457,55 @@ def get_knowledge_areas(occupation, top_n=5):
     return areas[:top_n]
 
 
-def get_course_roadmap(knowledge_areas, skill_gaps, job_zone=4):
-    """Map top knowledge areas and skill gaps into structured course stages."""
-    foundational_courses = set()
-    core_courses = set()
-    advanced_courses = set()
-    recommended_certifications = set()
+def get_course_roadmap(domain, job_zone=4):
+    """Retrieve curriculum stages appropriate for the career domain and preparation level."""
+    curriculum = DOMAIN_CURRICULA.get(domain, DOMAIN_CURRICULA["GENERAL_APPLIED"])
 
-    for area in knowledge_areas:
-        name = area["name"]
-        catalog_entry = COURSE_CATALOG.get(name)
-
-        if catalog_entry:
-            foundational_courses.update(catalog_entry.get("foundational", []))
-            core_courses.update(catalog_entry.get("core", []))
-            if float(job_zone or 3) >= 3.5:
-                advanced_courses.update(catalog_entry.get("advanced", []))
-            recommended_certifications.update(
-                catalog_entry.get("certifications", [])
-            )
-
-    # Add remedial courses for the largest skill gaps
-    for gap in skill_gaps[:3]:
-        course = gap.get("recommended_course")
-        if course:
-            foundational_courses.add(course)
-
-    # Fallback if no specific catalog matches were found
-    if not foundational_courses:
-        foundational_courses.add("General Foundations in Analytical Thinking & Computing")
-    if not core_courses:
-        core_courses.add("Core Applied Practice in Field Specialization")
+    stage_1 = curriculum["foundational"]
+    stage_2 = curriculum["core"]
+    stage_3 = curriculum["advanced"] if float(job_zone or 3) >= 3.0 else []
+    certs = curriculum["certifications"]
 
     return {
-        "stage_1_foundational": sorted(list(foundational_courses))[:4],
-        "stage_2_core": sorted(list(core_courses))[:4],
-        "stage_3_advanced": sorted(list(advanced_courses))[:4],
-        "certifications": sorted(list(recommended_certifications))[:3],
+        "stage_1_foundational": stage_1,
+        "stage_2_core": stage_2,
+        "stage_3_advanced": stage_3,
+        "certifications": certs,
     }
 
 
 def get_job_zone_guidance(job_zone):
-    """Explain the typical preparation associated with an O*NET Job Zone."""
+    """Explain typical preparation associated with the Job Zone."""
     guidance = {
         1: [
             "Preparation Level: Job Zone 1 (Little or No Preparation)",
-            "Required Education: High school diploma or GED equivalent.",
-            "Experience Needed: Little or no previous work-related skill, knowledge, or experience.",
+            "Required Education: High school diploma or equivalent qualification.",
+            "Experience Needed: Little or no previous work experience required.",
             "Training: Short demonstration to a few months of on-the-job training.",
         ],
         2: [
             "Preparation Level: Job Zone 2 (Some Preparation Needed)",
             "Required Education: High school diploma or certificate program.",
-            "Experience Needed: Some previous work-related skill, knowledge, or experience.",
+            "Experience Needed: Some previous work-related experience or vocational coursework.",
             "Training: A few months to one year of on-the-job training and practical apprenticeship.",
         ],
         3: [
             "Preparation Level: Job Zone 3 (Medium Preparation Needed)",
-            "Required Education: Vocational school degree, Associate's Degree, or specialized certificate.",
-            "Experience Needed: Previous work-related skill, knowledge, or experience usually needed (1-2 years).",
-            "Training: 1 to 2 years of vocational training or structured apprenticeship.",
+            "Required Education: Vocational school degree, Associate's Degree, or specialized diploma.",
+            "Experience Needed: Previous work-related skill or experience usually needed (1-2 years).",
+            "Training: 1 to 2 years of vocational training, studio apprenticeship, or practical coursework.",
         ],
         4: [
             "Preparation Level: Job Zone 4 (Considerable Preparation Needed)",
-            "Required Education: Most occupations require a 4-year Bachelor's Degree (B.S., B.A., B.Tech).",
+            "Required Education: Most occupations require a 4-year Bachelor's Degree.",
             "Experience Needed: A considerable amount of work-related skill, knowledge, or experience (2-4 years).",
-            "Training: Several years of work-related experience, on-the-job training, and project portfolio.",
+            "Training: Several years of applied project experience, coursework, and portfolio building.",
         ],
         5: [
             "Preparation Level: Job Zone 5 (Extensive Preparation Needed)",
-            "Required Education: Graduate degree typically required (Master's Degree, Ph.D., M.D., or J.D.).",
+            "Required Education: Graduate degree typically required (Master's Degree, Doctorate, or Professional Degree).",
             "Experience Needed: Extensive skill, knowledge, and experience (5+ years of specialized background).",
-            "Training: Graduate study, clinical/research internships, and advanced postdoctoral work.",
+            "Training: Advanced graduate study, research fellowships, or clinical internships.",
         ],
     }
 
@@ -551,73 +514,75 @@ def get_job_zone_guidance(job_zone):
     except (TypeError, ValueError):
         zone = 4
 
-    return guidance.get(
-        zone,
-        ["Research the education and training commonly required for this occupation."],
-    )
+    return guidance.get(zone, ["Research the education and training required for this occupation."])
 
 
-def get_project_suggestions(title):
-    """Return practical portfolio projects tailored to the occupation."""
-    title_cf = str(title).casefold()
-
-    if any(word in title_cf for word in ("data scientist", "statistician", "biostatistician", "quantitative analyst")):
+def get_project_suggestions(title, domain):
+    """Generate practical portfolio projects aligned with the occupation and domain."""
+    if domain == "ARTS_AND_DESIGN":
         return [
-            "Exploratory Data Analysis & Cleaning: Process a messy public dataset (Kaggle/UCI), identify outliers, and visualize key trends.",
-            "Predictive Modeling Pipeline: Implement supervised classification and regression pipelines with cross-validation and hyperparameter tuning.",
-            "Interactive Data Dashboard: Deploy an end-to-end interactive dashboard (Streamlit/Dash) showcasing reproducible insights.",
+            "Themed Artwork Collection: Create a series of 4–6 cohesive original works (paintings, sculptures, or illustrations) exploring a clear aesthetic theme.",
+            "Studio Medium & Technique Study: Experiment with varied traditional or digital media and document the material process and iterations.",
+            "Curated Public Portfolio Showcase: Assemble a comprehensive portfolio with high-resolution captures, artist statements, and process documentation.",
         ]
 
-    if any(word in title_cf for word in ("software developer", "software engineer", "web developer", "computer programmer")):
+    if domain == "GAME_DESIGN":
         return [
-            "Full-Stack Web Application: Design and deploy a responsive web app with user authentication, RESTful APIs, and database persistence.",
-            "System Utility & Algorithmic Tool: Implement a high-performance CLI tool with automated unit test suites and CI/CD automation.",
-            "Open Source Contribution: Submit a pull request or develop a reusable open-source library with comprehensive documentation.",
+            "Playable Gameplay Prototype: Build a working 2D or 3D prototype demonstrating core game mechanics, camera controls, and interaction loops.",
+            "Game Design Document (GDD): Author a comprehensive design document detailing game systems, character balancing, narrative arcs, and UI flows.",
+            "Interactive Level Design & Playtesting: Design an interactive environment, conduct structured playtesting sessions, and iterate based on player feedback.",
         ]
 
-    if any(word in title_cf for word in ("game designer", "video game")):
+    if domain == "COMPUTER_AND_IT":
         return [
-            "Core Gameplay Prototype: Design a playable 2D/3D prototype in Unity or Unreal Engine focusing on core mechanics and game loops.",
-            "Comprehensive Game Design Document (GDD): Write a complete GDD detailing narrative arcs, mechanics, balance matrices, and UI mockups.",
-            "Level Design & Playtesting: Build an interactive level, conduct playtesting sessions, and iterate based on quantitative player feedback.",
+            "End-to-End Application: Design and deploy a complete functional application with database storage, robust error handling, and clean architecture.",
+            "Data Pipeline or Analytical Model: Ingest and clean a messy public dataset, implement predictive modeling or analytical queries, and document results.",
+            "Open Source or Utility Library: Develop and publish a reusable utility tool or library complete with unit tests and clear documentation.",
         ]
 
-    if any(word in title_cf for word in ("research scientist", "microbiologist", "epidemiologist", "biochemist")):
+    if domain == "HEALTHCARE_AND_MEDICAL":
         return [
-            "Systematic Literature Synthesis: Review recent scientific studies on a focused research question and synthesize key findings.",
-            "Computational Data Experiment: Analyze genomic, biological, or epidemiological data using Python/R Bio-packages.",
-            "Peer-Format Research Report: Write a complete paper formatted with Abstract, Methods, Results, Discussion, and Reproducibility code.",
+            "Clinical Case Analysis: Review an evidence-based clinical case scenario and document differential diagnosis pathways and therapeutic guidelines.",
+            "Healthcare Workflow or Data Audit: Analyze health system workflows or data pipelines to identify quality improvements and compliance measures.",
+            "Public Health Intervention Proposal: Draft a structured preventive health program targeting community health risks with measurable outcome metrics.",
         ]
 
-    if any(word in title_cf for word in ("designer", "graphic", "ux", "ui", "multimedia")):
+    if domain == "BUSINESS_AND_FINANCE":
         return [
-            "User Experience Case Study: Conduct user research and wireframing to redesign an existing digital product.",
-            "Interactive Design System: Create a reusable component library in Figma complete with typography, accessibility guidelines, and interactions.",
-            "High-Fidelity Interactive Prototype: Build a clickable mobile/web prototype and document usability testing results.",
+            "Financial Valuation & Sensitivity Model: Construct an equity valuation model and scenario analysis evaluating capital expenditure options.",
+            "Market Analysis & Growth Strategy: Conduct competitive research on an industry sector and present strategic recommendations with projected returns.",
+            "Operations & Workflow Optimization: Map out an enterprise workflow, identify bottlenecks, and propose an optimized implementation plan.",
         ]
 
-    if any(word in title_cf for word in ("financial", "accountant", "economist", "auditor")):
+    if domain == "ENGINEERING_AND_TECH":
         return [
-            "Corporate Financial Valuation Model: Build a Discounted Cash Flow (DCF) model and sensitivity analysis for a publicly traded firm.",
-            "Macroeconomic Impact Brief: Analyze historical inflation, interest rate, and employment datasets to forecast sectoral impacts.",
-            "Portfolio Risk Optimization: Construct an optimal asset allocation portfolio using Modern Portfolio Theory in Python/Excel.",
+            "Mechanical or Electrical CAD Prototype: Design a 3D component or circuit schematic and evaluate it against structural or electrical specifications.",
+            "Simulation & Performance Analysis: Run computational finite element analysis (FEA) or circuit simulations and document performance margins.",
+            "Engineering Design Document: Author a formal engineering report covering design assumptions, test observations, and safety factor calculations.",
         ]
 
-    if any(word in title_cf for word in ("nurse", "physician", "doctor", "therapist", "medical", "healthcare")):
+    if domain == "NATURAL_SCIENCE_AND_RESEARCH":
         return [
-            "Clinical Case Review: Examine a complex clinical scenario using peer-reviewed guidelines and document diagnostic reasoning.",
-            "Public Health Intervention Plan: Design an evidence-based preventive health initiative targeting a specific community health risk.",
-            "Healthcare Safety & Protocol Audit: Review patient safety protocols and develop an educational checklist for clinical practitioners.",
+            "Empirical Scientific Investigation: Design an experiment with controlled variables, collect quantitative observations, and conduct statistical tests.",
+            "Systematic Literature Review: Review and synthesize findings from peer-reviewed scientific literature addressing a focused hypothesis.",
+            "Reproducible Scientific Report: Prepare a formal paper formatted with Abstract, Methods, Results, and Discussion with reproducible analysis scripts.",
+        ]
+
+    if domain == "EDUCATION_AND_HUMAN_SERVICES":
+        return [
+            "Comprehensive Curriculum Unit: Design a multi-week instructional plan with clear learning objectives, activities, and formative assessments.",
+            "Interactive Learning Activity: Develop an engaging educational simulation or interactive module designed for diverse learner needs.",
+            "Program Evaluation & Rubric: Construct an evaluation framework measuring educational outcomes and student engagement metrics.",
         ]
 
     return [
-        f"Industry Analysis & Domain Review: Research the core technologies and modern methodologies used by leading {title}s.",
-        f"Hands-On Milestone Project: Complete an applied portfolio artifact demonstrating primary skills required in {title}.",
-        "Professional Presentation: Document technical choices, results, and limitations in a public portfolio or GitHub repository.",
+        f"Domain Analysis & Standards Review: Research modern methodologies and practices used by leading {title} professionals.",
+        f"Applied Practical Portfolio Piece: Complete an applied portfolio artifact demonstrating primary skills required in {title}.",
+        "Professional Showcase: Document your technical process, outcomes, and reflections in a professional portfolio presentation.",
     ]
 
 
-def get_career_milestones(title, job_zone):
+def get_career_milestones(job_zone):
     """Generate chronological milestones for transitioning into the target career."""
     try:
         zone = int(float(job_zone))
@@ -626,34 +591,34 @@ def get_career_milestones(title, job_zone):
 
     if zone <= 2:
         return [
-            "Phase 1 (Months 1-3): Foundational coursework and essential workplace communication practice.",
-            "Phase 2 (Months 4-6): Hands-on training, technical certification, and initial apprenticeship application.",
-            "Phase 3 (Months 7-12): Entry-level placement and supervised industry experience.",
+            "Phase 1 (Months 1-3): Foundational coursework and core workplace competencies.",
+            "Phase 2 (Months 4-6): Hands-on practical training, technical credentialing, and apprenticeship applications.",
+            "Phase 3 (Months 7-12): Entry-level industry placement and supervised practical experience.",
         ]
     elif zone == 3:
         return [
-            "Phase 1 (Months 1-6): Complete vocational/associate coursework in core occupational competencies.",
-            "Phase 2 (Months 7-12): Earn relevant vocational certification and build hands-on project artifacts.",
-            "Phase 3 (Months 13-18): Secure an industry internship or technician role and refine on-the-job skills.",
+            "Phase 1 (Months 1-6): Complete vocational coursework and foundational studio/technical competencies.",
+            "Phase 2 (Months 7-12): Earn relevant vocational certification and build hands-on portfolio artifacts.",
+            "Phase 3 (Months 13-18): Secure an industry internship, residency, or technician role to refine on-the-job mastery.",
         ]
     elif zone == 4:
         return [
-            "Phase 1 (Year 1): Complete foundational math, computing, and domain science coursework.",
-            "Phase 2 (Year 2): Develop core technical capabilities, complete 2 major portfolio projects, and publish code.",
-            "Phase 3 (Year 3): Pursue industry internships, participate in hackathons/conferences, and earn specialized certifications.",
+            "Phase 1 (Year 1): Complete foundational coursework in relevant core disciplines.",
+            "Phase 2 (Year 2): Develop intermediate competencies, complete major portfolio projects, and publish work.",
+            "Phase 3 (Year 3): Pursue industry internships, participate in exhibitions/competitions, and earn specialized credentials.",
             "Phase 4 (Year 4): Capstone project execution, professional networking, and entry-level career placement.",
         ]
     else:  # Zone 5
         return [
-            "Phase 1 (Years 1-3): Complete rigorous undergraduate degree in relevant foundational disciplines.",
-            "Phase 2 (Years 4-5): Pursue graduate/master's studies, specialized research, and peer-reviewed publications.",
+            "Phase 1 (Years 1-3): Complete undergraduate degree in relevant foundational disciplines.",
+            "Phase 2 (Years 4-5): Pursue graduate/master's studies, specialized research, and peer-reviewed work.",
             "Phase 3 (Years 6+): Advanced residency, doctoral research, or industry fellowship leading to specialized senior practice.",
         ]
 
 
 def generate_roadmap(occupation, student_skills, predicted_job_zone=None):
     """
-    Build a personalized, multi-step roadmap:
+    Build a personalized, domain-accurate, multi-step roadmap:
     (Courses -> Skills -> Projects -> Career)
     """
     student_skills = validate_student_skills(student_skills)
@@ -663,16 +628,20 @@ def generate_roadmap(occupation, student_skills, predicted_job_zone=None):
     description = str(occupation.get("Description", ""))
     job_zone = occupation.get("Job Zone", 4)
 
-    skill_gaps = get_skill_gaps(occupation, student_skills)
+    # Detect exact career domain to prevent mismatched curricula
+    domain = detect_domain(code, title)
+
+    skill_gaps = get_skill_gaps(occupation, student_skills, domain=domain)
     knowledge_areas = get_knowledge_areas(occupation)
-    course_roadmap = get_course_roadmap(knowledge_areas, skill_gaps, job_zone=job_zone)
-    projects = get_project_suggestions(title)
-    career_milestones = get_career_milestones(title, job_zone)
+    course_roadmap = get_course_roadmap(domain, job_zone=job_zone)
+    projects = get_project_suggestions(title, domain)
+    career_milestones = get_career_milestones(job_zone)
     education_guidance = get_job_zone_guidance(job_zone)
 
     return {
         "title": title,
         "code": code,
+        "domain": domain,
         "description": description,
         "job_zone": job_zone,
         "predicted_job_zone": predicted_job_zone,
@@ -690,10 +659,6 @@ def print_roadmap(roadmap):
     print("\n" + "=" * 70)
     print(f"CAREERCOMPASS ROADMAP: {roadmap['title'].upper()}")
     print("=" * 70)
-    print(f"O*NET-SOC Code: {roadmap['code']}")
-    print(f"O*NET Job Zone: {roadmap['job_zone']}")
-    if roadmap.get("predicted_job_zone") is not None:
-        print(f"Supervised ML Predicted Job Zone: {roadmap['predicted_job_zone']}")
 
     if roadmap.get("description"):
         print(f"\nDescription:\n  {roadmap['description']}")
@@ -703,7 +668,7 @@ def print_roadmap(roadmap):
     print("STEP 1: COURSEWORK ROADMAP (COURSES)")
     print("-" * 70)
     cr = roadmap["course_roadmap"]
-    print("  Stage 1: Foundational Coursework (Prerequisites & Core Concepts):")
+    print("  Stage 1: Foundational Coursework (Core Principles):")
     for course in cr["stage_1_foundational"]:
         print(f"    * {course}")
 
@@ -712,12 +677,12 @@ def print_roadmap(roadmap):
         print(f"    * {course}")
 
     if cr.get("stage_3_advanced"):
-        print("\n  Stage 3: Advanced Specialization & Applied Electives:")
+        print("\n  Stage 3: Advanced Specialization & Capstone:")
         for course in cr["stage_3_advanced"]:
             print(f"    * {course}")
 
     if cr.get("certifications"):
-        print("\n  Recommended Industry Certifications:")
+        print("\n  Recommended Professional Credentials & Certifications:")
         for cert in cr["certifications"]:
             print(f"    * {cert}")
 
@@ -727,7 +692,7 @@ def print_roadmap(roadmap):
     print("-" * 70)
     gaps = roadmap["gaps"]
     if gaps:
-        print("  Priority Skill Gaps Identified (Your Rating vs O*NET Requirement):")
+        print("  Priority Skill Gaps Identified (Your Rating vs Benchmark Requirement):")
         for item in gaps[:5]:
             print(
                 f"    * {item['skill']}: Current={item['current']:.1f}/5.0 | "
@@ -735,7 +700,7 @@ def print_roadmap(roadmap):
             )
             print(f"      Action: {item['actionable_exercise']}")
     else:
-        print("  All assessed skills meet or exceed the target career requirements.")
+        print("  All assessed skills meet or exceed target occupational benchmarks.")
 
     # STEP 3: PRACTICAL PROJECTS
     print("\n" + "-" * 70)
@@ -760,7 +725,9 @@ def print_roadmap(roadmap):
 
 def main():
     profiles = load_profiles()
-    occupation = find_occupation(profiles, title="Data Scientists")
+    occupation = find_occupation(
+        profiles, title="Fine Artists, Including Painters, Sculptors, and Illustrators"
+    )
 
     student_skills = {
         "Speaking": 2.0,
@@ -770,7 +737,7 @@ def main():
         "Active Learning": 3.0,
     }
 
-    roadmap = generate_roadmap(occupation, student_skills, predicted_job_zone=4.0)
+    roadmap = generate_roadmap(occupation, student_skills, predicted_job_zone=3.0)
     print_roadmap(roadmap)
 
 

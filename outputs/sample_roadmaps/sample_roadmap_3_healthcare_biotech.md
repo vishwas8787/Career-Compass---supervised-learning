@@ -1,7 +1,7 @@
 # CareerCompass Roadmap: Health Informatics Specialists
 **Deliverable Type:** Sample Generated Career & Education Roadmap  
 **Target Persona:** Marcus Patel — Biomedical science student aiming for health data analytics, epidemiological informatics, and research.  
-**O*NET-SOC Code:** `15-1211.01` | **Actual Job Zone:** `5.0` | **Supervised ML Predicted Zone:** `5.0`  
+**O*NET-SOC Code:** `15-1211.01` | **Job Zone:** `5.0` | **Random Forest Predicted Zone:** `5.0`  
 **Profile Match Score:** `94.60%` (Interest: `96.6%`, Skill: `86.5%`)  
 
 ---
@@ -10,7 +10,7 @@
 > Apply knowledge of nursing and informatics to assist in the design, development, and ongoing modification of computerized health care systems. May educate staff and assist in problem solving to promote the implementation of the health care system.
 
 ### Student Assessment Input
-- **Holland RIASEC Ratings (0-5):**
+- **Student Interest Profile Ratings (0-5):**
   - `Realistic`: 1.5/5.0
   - `Investigative`: 5.0/5.0
   - `Artistic`: 0.5/5.0
@@ -30,27 +30,25 @@
 The coursework plan bridges the student's foundation to advanced occupational requirements across three academic stages.
 
 ### Stage 1: Foundational Prerequisites (Semesters 1–2)
-- **COMM 104: Interpersonal Communication & Stakeholder Empathy**
-- **CS 101: Introduction to Computer Science & Programming (Python)**
-- **CS 102: Digital Logic and Computer Architecture**
-- **EDUC 101: Foundations of Education & Learning Theories**
+- **General Biology with Laboratory**
+- **Human Anatomy and Physiology**
+- **Medical Terminology & Healthcare Ethics**
+- **General Chemistry & Laboratory Safety**
 
 ### Stage 2: Core & Major Discipline (Semesters 3–4)
-- **CS 201: Data Structures and Algorithms**
-- **CS 205: Database Systems & SQL**
-- **CS 210: Operating Systems & Computer Networking**
-- **EDUC 201: Instructional Design Principles & Curriculum Planning**
+- **General Pathophysiology & Disease Mechanisms**
+- **Biochemistry & Cellular Mechanisms**
+- **Health Information Systems & Electronic Records**
+- **Biostatistics and Research Methodology**
 
 ### Stage 3: Advanced Specialization & Capstone (Semesters 5+)
-- **CS 301: Machine Learning & Intelligent Systems**
-- **CS 305: Cloud Computing & Distributed Architecture**
-- **CS 315: Software Engineering & Agile Development**
-- **EDUC 301: Assessment, Evaluation & Learning Analytics**
+- **Clinical Epidemiology & Evidence-Based Practice**
+- **Principles of Pharmacology & Diagnostics**
+- **Healthcare Quality Management & Patient Safety**
 
 ### Recommended Industry Credentials & Certifications
-- 🏆 **AWS Certified Solutions Architect / Cloud Practitioner**
-- 🏆 **Certified Clinical Medical Assistant (CCMA)**
-- 🏆 **Certified Healthcare Information & Management Systems (CPHIMS)**
+- 🏆 **Certified Healthcare Information & Management Credential**
+- 🏆 **Clinical Specialist Certification**
 
 ---
 
@@ -59,10 +57,10 @@ Priority gaps calculated against official O*NET benchmark requirements for this 
 
 | Essential Skill | Current Level | O*NET Target | Skill Gap | Priority Actionable Exercise |
 | :--- | :---: | :---: | :---: | :--- |
-| **Critical Thinking** | `3.0/5.0` | `4.00/5.0` | **+1.00** | Deconstruct a published technical paper or business case study; map assumptions vs. empirical evidence. |
-| **Active Listening** | `3.0/5.0` | `4.00/5.0` | **+1.00** | Engage in simulated stakeholder interviews, take structured notes, and confirm requirements via active playback. |
-| **Reading Comprehension** | `3.5/5.0` | `4.38/5.0` | **+0.88** | Read and summarize peer-reviewed journals or standard specifications into 1-page executive briefs. |
-| **Mathematics** | `2.5/5.0` | `3.00/5.0` | **+0.50** | Solve 5 applied real-world numerical problems weekly and verify using Python/NumPy. |
+| **Critical Thinking** | `3.0/5.0` | `4.00/5.0` | **+1.00** | Evaluate differential diagnoses and weigh clinical evidence against diagnostic guidelines. |
+| **Active Listening** | `3.0/5.0` | `4.00/5.0` | **+1.00** | Engage in patient interviews with empathetic listening to elicit complete medical histories. |
+| **Reading Comprehension** | `3.5/5.0` | `4.38/5.0` | **+0.88** | Analyze peer-reviewed medical literature and clinical trial protocols. |
+| **Mathematics** | `2.5/5.0` | `3.00/5.0` | **+0.50** | Calculate clinical dosage adjustments, statistical efficacy ratios, and patient metrics. |
 
 ### High-Impact O*NET Knowledge Domains:
 - **Computers and Electronics** (O*NET Importance Rating: `4.20/5.0`)
@@ -76,22 +74,22 @@ Priority gaps calculated against official O*NET benchmark requirements for this 
 ## 4. Step 3: Practical Portfolio Projects (Artifacts)
 Hands-on proof-of-work required to demonstrate applied competence to recruiters and academic admissions:
 
-1. **Industry Analysis & Domain Review: Research the core technologies and modern methodologies used by leading Health Informatics Specialistss.**
-2. **Hands-On Milestone Project: Complete an applied portfolio artifact demonstrating primary skills required in Health Informatics Specialists.**
-3. **Professional Presentation: Document technical choices, results, and limitations in a public portfolio or GitHub repository.**
+1. **Clinical Case Analysis: Review an evidence-based clinical case scenario and document differential diagnosis pathways and therapeutic guidelines.**
+2. **Healthcare Workflow or Data Audit: Analyze health system workflows or data pipelines to identify quality improvements and compliance measures.**
+3. **Public Health Intervention Proposal: Draft a structured preventive health program targeting community health risks with measurable outcome metrics.**
 
 ---
 
 ## 5. Step 4: Career Entry Milestones & Job Zone Preparation (Career)
 ### Degree & Education Requirements
 - Preparation Level: Job Zone 5 (Extensive Preparation Needed)
-- Required Education: Graduate degree typically required (Master's Degree, Ph.D., M.D., or J.D.).
+- Required Education: Graduate degree typically required (Master's Degree, Doctorate, or Professional Degree).
 - Experience Needed: Extensive skill, knowledge, and experience (5+ years of specialized background).
-- Training: Graduate study, clinical/research internships, and advanced postdoctoral work.
+- Training: Advanced graduate study, research fellowships, or clinical internships.
 
 ### Chronological Roadmap Milestones
-- 📌 **Phase 1 (Years 1-3): Complete rigorous undergraduate degree in relevant foundational disciplines.**
-- 📌 **Phase 2 (Years 4-5): Pursue graduate/master's studies, specialized research, and peer-reviewed publications.**
+- 📌 **Phase 1 (Years 1-3): Complete undergraduate degree in relevant foundational disciplines.**
+- 📌 **Phase 2 (Years 4-5): Pursue graduate/master's studies, specialized research, and peer-reviewed work.**
 - 📌 **Phase 3 (Years 6+): Advanced residency, doctoral research, or industry fellowship leading to specialized senior practice.**
 
 ---

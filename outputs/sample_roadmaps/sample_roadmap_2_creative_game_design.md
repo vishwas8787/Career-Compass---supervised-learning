@@ -1,7 +1,7 @@
 # CareerCompass Roadmap: Video Game Designers
 **Deliverable Type:** Sample Generated Career & Education Roadmap  
 **Target Persona:** Maya Rodriguez — Design & media student seeking to combine visual artistry, storytelling, and interactive game mechanics.  
-**O*NET-SOC Code:** `15-1255.01` | **Actual Job Zone:** `4.0` | **Supervised ML Predicted Zone:** `4.0`  
+**O*NET-SOC Code:** `15-1255.01` | **Job Zone:** `4.0` | **Random Forest Predicted Zone:** `4.0`  
 **Profile Match Score:** `91.89%` (Interest: `94.2%`, Skill: `82.5%`)  
 
 ---
@@ -10,7 +10,7 @@
 > Design core features of video games. Specify innovative game and role-play mechanics, story lines, and character biographies. Create and maintain design documentation. Guide and collaborate with production staff to produce games as designed.
 
 ### Student Assessment Input
-- **Holland RIASEC Ratings (0-5):**
+- **Student Interest Profile Ratings (0-5):**
   - `Realistic`: 1.5/5.0
   - `Investigative`: 2.0/5.0
   - `Artistic`: 5.0/5.0
@@ -30,27 +30,25 @@
 The coursework plan bridges the student's foundation to advanced occupational requirements across three academic stages.
 
 ### Stage 1: Foundational Prerequisites (Semesters 1–2)
-- **COMM 101: Introduction to Mass Communication & Media**
-- **COMM 104: Interpersonal Communication & Stakeholder Empathy**
-- **COMM 105: Public Speaking and Strategic Rhetoric**
-- **CS 101: Introduction to Computer Science & Programming (Python)**
+- **Visual Design Fundamentals & Color Theory**
+- **Game Mechanics & Interactive Storytelling**
+- **2D Asset Creation & Animation**
+- **Mathematics for Computer Graphics**
 
 ### Stage 2: Core & Major Discipline (Semesters 3–4)
-- **COMM 201: Digital Content Production & Multimedia Storytelling**
-- **COMM 205: Technical Writing & Editing for Digital Media**
-- **CS 201: Data Structures and Algorithms**
-- **CS 205: Database Systems & SQL**
+- **3D Asset Modeling & Texture Mapping**
+- **Game Engine Architecture & Interactive Scripting**
+- **Level Design & Player Experience**
+- **Audio Design & Environmental Foley**
 
 ### Stage 3: Advanced Specialization & Capstone (Semesters 5+)
-- **COMM 301: Media Analytics & Audience Insights**
-- **COMM 305: Crisis Communication & Public Relations Strategy**
-- **CS 301: Machine Learning & Intelligent Systems**
-- **CS 305: Cloud Computing & Distributed Architecture**
+- **Systems Design & Gameplay Balancing**
+- **Interactive Physics & Real-Time Simulation**
+- **Capstone Playable Game Prototype**
 
 ### Recommended Industry Credentials & Certifications
-- 🏆 **AWS Certified Solutions Architect / Cloud Practitioner**
-- 🏆 **Applied Data Science with Python (Specialization)**
-- 🏆 **Applied Ergonomics & Human Factors Certificate**
+- 🏆 **Professional Game Design & Engine Certification**
+- 🏆 **Interactive Media Systems Credential**
 
 ---
 
@@ -59,11 +57,11 @@ Priority gaps calculated against official O*NET benchmark requirements for this 
 
 | Essential Skill | Current Level | O*NET Target | Skill Gap | Priority Actionable Exercise |
 | :--- | :---: | :---: | :---: | :--- |
-| **Critical Thinking** | `2.5/5.0` | `3.75/5.0` | **+1.25** | Deconstruct a published technical paper or business case study; map assumptions vs. empirical evidence. |
-| **Mathematics** | `1.5/5.0` | `2.88/5.0` | **+1.38** | Solve 5 applied real-world numerical problems weekly and verify using Python/NumPy. |
-| **Active Listening** | `3.0/5.0` | `3.88/5.0` | **+0.88** | Engage in simulated stakeholder interviews, take structured notes, and confirm requirements via active playback. |
-| **Speaking** | `2.5/5.0` | `3.12/5.0` | **+0.62** | Deliver a 5-minute recorded presentation on a technical topic; review pacing, slide clarity, and articulation. |
-| **Writing** | `3.0/5.0` | `3.25/5.0` | **+0.25** | Draft clear GitHub documentation, design memos, and project READMEs with architecture diagrams. |
+| **Critical Thinking** | `2.5/5.0` | `3.75/5.0` | **+1.25** | Analyze underlying assumptions, evaluate empirical evidence, and identify risks. |
+| **Mathematics** | `1.5/5.0` | `2.88/5.0` | **+1.38** | Apply quantitative reasoning and numerical problem solving to practical workplace tasks. |
+| **Active Listening** | `3.0/5.0` | `3.88/5.0` | **+0.88** | Engage in structured stakeholder discussions, confirm understanding, and summarize action items. |
+| **Speaking** | `2.5/5.0` | `3.12/5.0` | **+0.62** | Deliver a structured 5-minute presentation explaining core domain topics to colleagues. |
+| **Writing** | `3.0/5.0` | `3.25/5.0` | **+0.25** | Draft clear professional summaries and documentation outlining processes and results. |
 
 ### High-Impact O*NET Knowledge Domains:
 - **Design** (O*NET Importance Rating: `4.26/5.0`)
@@ -77,23 +75,23 @@ Priority gaps calculated against official O*NET benchmark requirements for this 
 ## 4. Step 3: Practical Portfolio Projects (Artifacts)
 Hands-on proof-of-work required to demonstrate applied competence to recruiters and academic admissions:
 
-1. **Core Gameplay Prototype: Design a playable 2D/3D prototype in Unity or Unreal Engine focusing on core mechanics and game loops.**
-2. **Comprehensive Game Design Document (GDD): Write a complete GDD detailing narrative arcs, mechanics, balance matrices, and UI mockups.**
-3. **Level Design & Playtesting: Build an interactive level, conduct playtesting sessions, and iterate based on quantitative player feedback.**
+1. **Playable Gameplay Prototype: Build a working 2D or 3D prototype demonstrating core game mechanics, camera controls, and interaction loops.**
+2. **Game Design Document (GDD): Author a comprehensive design document detailing game systems, character balancing, narrative arcs, and UI flows.**
+3. **Interactive Level Design & Playtesting: Design an interactive environment, conduct structured playtesting sessions, and iterate based on player feedback.**
 
 ---
 
 ## 5. Step 4: Career Entry Milestones & Job Zone Preparation (Career)
 ### Degree & Education Requirements
 - Preparation Level: Job Zone 4 (Considerable Preparation Needed)
-- Required Education: Most occupations require a 4-year Bachelor's Degree (B.S., B.A., B.Tech).
+- Required Education: Most occupations require a 4-year Bachelor's Degree.
 - Experience Needed: A considerable amount of work-related skill, knowledge, or experience (2-4 years).
-- Training: Several years of work-related experience, on-the-job training, and project portfolio.
+- Training: Several years of applied project experience, coursework, and portfolio building.
 
 ### Chronological Roadmap Milestones
-- 📌 **Phase 1 (Year 1): Complete foundational math, computing, and domain science coursework.**
-- 📌 **Phase 2 (Year 2): Develop core technical capabilities, complete 2 major portfolio projects, and publish code.**
-- 📌 **Phase 3 (Year 3): Pursue industry internships, participate in hackathons/conferences, and earn specialized certifications.**
+- 📌 **Phase 1 (Year 1): Complete foundational coursework in relevant core disciplines.**
+- 📌 **Phase 2 (Year 2): Develop intermediate competencies, complete major portfolio projects, and publish work.**
+- 📌 **Phase 3 (Year 3): Pursue industry internships, participate in exhibitions/competitions, and earn specialized credentials.**
 - 📌 **Phase 4 (Year 4): Capstone project execution, professional networking, and entry-level career placement.**
 
 ---

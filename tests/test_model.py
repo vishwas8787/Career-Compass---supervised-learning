@@ -26,7 +26,8 @@ class TestJobZoneModel(unittest.TestCase):
     def test_model_artifact_structure(self):
         self.assertIn("model", self.saved_dict)
         self.assertIn("feature_columns", self.saved_dict)
-        self.assertIn("zone3_threshold", self.saved_dict)
+        self.assertIn("model_type", self.saved_dict)
+        self.assertEqual(self.saved_dict["model_type"], "RandomForestClassifier")
         self.assertGreater(len(self.features), 20)
 
     def test_model_classes(self):

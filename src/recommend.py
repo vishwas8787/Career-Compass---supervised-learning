@@ -1,55 +1,62 @@
-
-import pandas as pd
-import numpy as np
-import joblib
+"""
+Career recommendation module for CareerCompass.
+Matches student interest and skill profiles to occupations using Scikit-Learn
+K-Nearest Neighbors (KNN) distance and predicts preparation levels using
+a trained Random Forest Classifier.
+Course: CSE395 Supervised Learning
+"""
 
 from pathlib import Path
+import joblib
+import numpy as np
+import pandas as pd
+from sklearn.neighbors import NearestNeighbors
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-DATA_FILE = (
-    PROJECT_ROOT / "data" / "processed" / "occupation_features.csv"
-)
-
+DATA_FILE = PROJECT_ROOT / "data" / "processed" / "occupation_features.csv"
 MODEL_FILE = PROJECT_ROOT / "models" / "job_zone_model.joblib"
 
-# Initial ranking weights; we'll evaluate these later.
 INTEREST_WEIGHT = 0.80
 SKILL_WEIGHT = 0.20
 
+# Canonical feature mapping (accepts both plain names and dataset labels)
 INTEREST_COLUMNS = {
+    "practical": "interest_Realistic",
     "realistic": "interest_Realistic",
+    "analytical": "interest_Investigative",
     "investigative": "interest_Investigative",
+    "creative": "interest_Artistic",
     "artistic": "interest_Artistic",
     "social": "interest_Social",
+    "business": "interest_Enterprising",
     "enterprising": "interest_Enterprising",
+    "organized": "interest_Conventional",
     "conventional": "interest_Conventional",
 }
 
 
 def load_resources():
-    """Load occupation profiles and the trained Job Zone model."""
+    """Load occupation profiles and the trained Random Forest model."""
     if not DATA_FILE.exists():
         raise FileNotFoundError(
-            "Occupation features not found. "
-            "Run preprocessing.py and feature_engineering.py first."
+            "Occupation features not found. Run preprocessing.py first."
         )
 
     if not MODEL_FILE.exists():
         raise FileNotFoundError(
-            "Job Zone model not found. Run train.py first."
+            "Model not found. Run src/train.py first."
         )
 
     profiles = pd.read_csv(DATA_FILE)
     saved = joblib.load(MODEL_FILE)
 
     return (
-    profiles,
-    saved["model"],
-    saved["feature_columns"],
-    saved.get("zone3_threshold", 1.01),
-)
+        profiles,
+        saved["model"],
+        saved["feature_columns"],
+        saved.get("classes", [2, 3, 4, 5]),
+    )
 
 
 def validate_ratings(ratings, label):
@@ -72,101 +79,68 @@ def validate_ratings(ratings, label):
     return validated
 
 
-
-
 def calculate_interest_scores(profiles, interests):
-    """Calculate career-interest similarity using cosine similarity."""
-    interest_columns = {
-        name: column
-        for name, column in INTEREST_COLUMNS.items()
-        if name in interests
-    }
+    """Calculate career affinity using Scikit-Learn NearestNeighbors metric."""
+    resolved_columns = {}
+    for user_key, val in interests.items():
+        col = INTEREST_COLUMNS.get(user_key.strip().lower())
+        if col and col in profiles.columns:
+            resolved_columns[col] = val
 
-    if not interest_columns:
+    if not resolved_columns:
         raise ValueError("At least one interest rating is required.")
 
-    columns = list(interest_columns.values())
+    cols = list(set(resolved_columns.keys()))
+    user_vec = np.array([resolved_columns[c] for c in cols], dtype=float).reshape(1, -1)
 
-    user_vector = np.array(
-        [interests[name] for name in interest_columns],
-        dtype=float,
-    )
+    career_mat = profiles[cols].apply(pd.to_numeric, errors="coerce").fillna(0.0).to_numpy()
 
-    career_matrix = profiles[columns].apply(
-        pd.to_numeric, errors="coerce"
-    ).to_numpy(dtype=float)
+    # Use Scikit-Learn NearestNeighbors with cosine metric
+    nn = NearestNeighbors(n_neighbors=min(len(profiles), 200), metric="cosine")
+    nn.fit(career_mat)
+    distances, indices = nn.kneighbors(user_vec, n_neighbors=len(profiles))
 
-    user_norm = np.linalg.norm(user_vector)
-    career_norms = np.linalg.norm(career_matrix, axis=1)
-
+    # Convert cosine distance (0 to 2) to match percentage (0 to 100)
     scores = np.zeros(len(profiles), dtype=float)
+    cos_dists = distances[0]
+    matched_idx = indices[0]
 
-    valid = (
-        np.isfinite(career_matrix).all(axis=1)
-        & (career_norms > 0)
-        & (user_norm > 0)
-    )
-
-    if valid.any():
-        similarities = (
-            career_matrix[valid] @ user_vector
-        ) / (career_norms[valid] * user_norm)
-
-        scores[valid] = np.clip(similarities, 0, 1) * 100
+    similarity = np.clip(1.0 - cos_dists, 0.0, 1.0) * 100.0
+    scores[matched_idx] = similarity
 
     return pd.Series(scores, index=profiles.index)
 
 
 def calculate_skill_scores(profiles, skills):
-    """Score how well the user's skills meet career requirements."""
+    """Score how well the user's current skills meet career requirements."""
     if not skills:
         return pd.Series(0.0, index=profiles.index)
 
-    skill_columns = {
+    skill_cols = {
         f"skill_{name.strip()}": rating
         for name, rating in skills.items()
         if f"skill_{name.strip()}" in profiles.columns
     }
 
-    if not skill_columns:
+    if not skill_cols:
         return pd.Series(0.0, index=profiles.index)
 
-    columns = list(skill_columns.keys())
+    cols = list(skill_cols.keys())
+    user_vec = np.array([skill_cols[c] for c in cols], dtype=float)
 
-    user_vector = np.array(
-        [skill_columns[column] for column in columns],
-        dtype=float,
-    )
+    career_mat = profiles[cols].apply(pd.to_numeric, errors="coerce").fillna(0.0).to_numpy()
 
-    career_matrix = profiles[columns].apply(
-        pd.to_numeric, errors="coerce"
-    ).to_numpy(dtype=float)
+    # Penalize only when student's rating falls below career requirement
+    gaps = np.maximum(career_mat - user_vec, 0)
+    mean_gap = gaps.mean(axis=1)
 
-    valid = np.isfinite(career_matrix).all(axis=1)
-    scores = np.zeros(len(profiles), dtype=float)
-
-    if valid.any():
-        requirements = career_matrix[valid]
-
-        # Penalize only the amount by which the user's skill
-        # rating falls below the occupation's requirement.
-        gaps = np.maximum(requirements - user_vector, 0)
-
-        mean_gap = gaps.mean(axis=1)
-
-        scores[valid] = (
-            1 - mean_gap / 5.0
-        ).clip(0, 1) * 100
-
+    scores = (1.0 - mean_gap / 5.0).clip(0.0, 1.0) * 100.0
     return pd.Series(scores, index=profiles.index)
 
 
 def select_diverse_careers(results, top_n=5, max_per_group=2):
-    """Select high-scoring careers while limiting same-group repetition."""
+    """Select high-scoring careers while avoiding excessive duplication in a single domain."""
     results = results.copy()
-
-    # O*NET-SOC major groups are represented by the first two digits
-    # of the occupation code, e.g. 15 = Computer and Mathematical.
     results["Major Group"] = (
         results["O*NET-SOC Code"]
         .astype(str)
@@ -176,13 +150,8 @@ def select_diverse_careers(results, top_n=5, max_per_group=2):
     selected_indices = []
     group_counts = {}
 
-    # First pass: respect the group limit.
     for index, row in results.iterrows():
-        group = row["Major Group"]
-
-        if group is None or pd.isna(group):
-            group = "Unknown"
-
+        group = row["Major Group"] or "Unknown"
         if group_counts.get(group, 0) >= max_per_group:
             continue
 
@@ -192,12 +161,10 @@ def select_diverse_careers(results, top_n=5, max_per_group=2):
         if len(selected_indices) >= top_n:
             break
 
-    # Fallback: fill remaining places if the group limit leaves gaps.
     if len(selected_indices) < min(top_n, len(results)):
         for index in results.index:
             if index not in selected_indices:
                 selected_indices.append(index)
-
             if len(selected_indices) >= min(top_n, len(results)):
                 break
 
@@ -208,108 +175,63 @@ def select_diverse_careers(results, top_n=5, max_per_group=2):
     )
 
 
-
 def recommend_careers(interests, skills=None, top_n=5):
-    """Rank occupations using interest and skill similarity."""
-    profiles, model, model_features, zone3_threshold = load_resources()
+    """Rank careers using Scikit-Learn KNN and predict Job Zone with Random Forest."""
+    profiles, rf_model, model_features, classes = load_resources()
 
-    interests = {
-        name.strip().lower(): value
-        for name, value in interests.items()
-    }
+    interests = {k.strip().lower(): v for k, v in interests.items()}
     skills = skills or {}
 
     interests = validate_ratings(interests, "Interest")
     skills = validate_ratings(skills, "Skill")
 
-    if not isinstance(top_n, int) or isinstance(top_n, bool) or top_n < 1:
+    if not isinstance(top_n, int) or top_n < 1:
         raise ValueError("top_n must be a positive integer.")
-
-    unknown_interests = set(interests) - set(INTEREST_COLUMNS)
-    if unknown_interests:
-        raise ValueError(
-            f"Unknown interests: {', '.join(sorted(unknown_interests))}"
-        )
 
     interest_scores = calculate_interest_scores(profiles, interests)
     skill_scores = calculate_skill_scores(profiles, skills)
 
     if skills:
         match_scores = (
-            INTEREST_WEIGHT * interest_scores
-            + SKILL_WEIGHT * skill_scores
+            INTEREST_WEIGHT * interest_scores + SKILL_WEIGHT * skill_scores
         )
     else:
         match_scores = interest_scores
 
-    # Predict Job Zone independently of the career match score.
-    X = profiles[model_features].apply(pd.to_numeric, errors="coerce")
-    valid_rows = X.notna().all(axis=1)
-    predicted_zones = np.full(len(profiles), np.nan)
+    # Predict Job Zone using the trained Random Forest Classifier
+    X = profiles[model_features].apply(pd.to_numeric, errors="coerce").fillna(0.0)
+    rf_predictions = rf_model.predict(X)
 
-    if valid_rows.any():
-        X_valid = X.loc[valid_rows]
-        probabilities = model.predict_proba(X_valid)
-        classes = model.classes_
-
-        predictions = classes[np.argmax(probabilities, axis=1)]
-
-        zone3_positions = np.flatnonzero(classes == 3)
-
-        if len(zone3_positions) > 0 and zone3_threshold <= 1.0:
-            zone3_position = zone3_positions[0]
-            zone3_probabilities = probabilities[:, zone3_position]
-            predictions[zone3_probabilities >= zone3_threshold] = 3
-
-        predicted_zones[valid_rows.to_numpy()] = predictions
-
-    # Build results regardless of whether any valid model rows exist.
-    results = profiles[
-        ["O*NET-SOC Code", "Title", "Job Zone"]
-    ].copy()
-
+    results = profiles[["O*NET-SOC Code", "Title", "Job Zone"]].copy()
     results["Interest Match (%)"] = interest_scores
     results["Skill Match (%)"] = skill_scores
     results["Match Score (%)"] = match_scores
-    results["Predicted Job Zone"] = predicted_zones
+    results["Predicted Job Zone"] = rf_predictions.astype(float)
 
-    results = results.sort_values(
-        "Match Score (%)", ascending=False
-    ).reset_index(drop=True)
+    results = results.sort_values("Match Score (%)", ascending=False).reset_index(drop=True)
 
-    return select_diverse_careers(
-        results,
-        top_n=top_n,
-        max_per_group=2,
-    )
-
+    return select_diverse_careers(results, top_n=top_n, max_per_group=2)
 
 
 def main():
-    print("CAREERCOMPASS - CAREER RECOMMENDATIONS")
+    print("CAREERCOMPASS - CAREER RECOMMENDATIONS (RANDOM FOREST + KNN)")
 
     interests = {
-        "realistic": 0,
-        "investigative": 5,
-        "artistic": 0,
-        "social": 0,
-        "enterprising": 0,
-        "conventional": 0,
+        "creative": 4.5,
+        "practical": 3.0,
+        "analytical": 2.0,
+        "social": 1.5,
+        "business": 2.0,
+        "organized": 2.0,
     }
 
     skills = {
-        "Critical Thinking": 1,
-        "Mathematics": 1,
-        "Writing": 1,
+        "Critical Thinking": 3.0,
+        "Writing": 3.0,
     }
 
-    recommendations = recommend_careers(
-        interests=interests,
-        skills=skills,
-        top_n=5,
-    )
-
-    print("\nTop career matches:")
+    recommendations = recommend_careers(interests, skills, top_n=5)
+    print("\nTop Career Matches:")
     print(recommendations.to_string(index=False))
 
 

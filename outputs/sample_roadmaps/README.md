@@ -12,5 +12,5 @@ Each roadmap proves the personalized **(Courses → Skills → Career)** multi-s
 ---
 
 ### Pipeline Verification Notes:
-- **Supervised Learning Integration:** Job Zone is predicted by the ExtraTrees classifier trained on 49 O*NET features, verifying the required preparation level for each career pathway.
+- **Supervised Learning Integration:** Job Zone is predicted by the Random Forest Classifier trained on 49 occupational features, verifying the required preparation level for each career pathway.
 - **Pathway Completeness:** Every sample demonstrates specific Coursework stages, quantified Skill gaps with remedial exercises, portfolio Projects, and long-term Career milestones.

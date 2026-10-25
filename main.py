@@ -1,9 +1,9 @@
 """
 CareerCompass - Career & Education Advisor
 Command-line Interface & Agent Demo
+Course: CSE395 Supervised Learning
 """
 
-import sys
 import argparse
 from src.recommend import recommend_careers
 from src.roadmap import (
@@ -15,12 +15,12 @@ from src.roadmap import (
 
 
 INTERESTS = {
-    "1": "realistic",
-    "2": "investigative",
-    "3": "artistic",
-    "4": "social",
-    "5": "enterprising",
-    "6": "conventional",
+    "1": ("practical", "Practical & Hands-on (tools, physical objects, outdoors)"),
+    "2": ("analytical", "Analytical & Scientific (solving problems, research, analysis)"),
+    "3": ("creative", "Creative & Artistic (design, art, visual media, writing)"),
+    "4": ("social", "Social & Helping (teaching, community, advising, healthcare)"),
+    "5": ("business", "Business & Leadership (managing, sales, leading projects)"),
+    "6": ("organized", "Structured & Detail-Oriented (organization, data, administration)"),
 }
 
 SKILL_NAMES = [
@@ -38,60 +38,58 @@ SKILL_NAMES = [
 
 PRESET_PROFILES = {
     "1": {
-        "name": "Persona 1: Computer Science & AI Aspirant",
+        "name": "Profile 1: Computer Science, Data Systems & AI",
         "interests": {
-            "realistic": 3.0,
-            "investigative": 5.0,
-            "artistic": 1.0,
-            "social": 1.5,
-            "enterprising": 2.0,
-            "conventional": 2.5,
+            "practical": 1.5,
+            "analytical": 5.0,
+            "creative": 1.0,
+            "social": 0.5,
+            "business": 2.0,
+            "organized": 4.0,
         },
         "skills": {
             "Mathematics": 2.5,
             "Critical Thinking": 3.0,
             "Active Learning": 3.0,
-            "Science": 2.5,
+            "Science": 2.0,
             "Speaking": 1.5,
             "Writing": 2.0,
         },
     },
     "2": {
-        "name": "Persona 2: Digital Media & Creative Game Designer",
+        "name": "Profile 2: Visual Arts & Creative Design",
         "interests": {
-            "realistic": 2.0,
-            "investigative": 2.5,
-            "artistic": 5.0,
-            "social": 2.0,
-            "enterprising": 4.0,
-            "conventional": 1.5,
+            "practical": 3.0,
+            "analytical": 2.0,
+            "creative": 5.0,
+            "social": 1.5,
+            "business": 2.0,
+            "organized": 2.0,
         },
         "skills": {
-            "Critical Thinking": 2.5,
-            "Active Listening": 3.5,
             "Writing": 3.0,
-            "Speaking": 3.0,
-            "Learning Strategies": 3.0,
+            "Critical Thinking": 2.5,
+            "Active Listening": 3.0,
+            "Speaking": 2.0,
             "Mathematics": 1.5,
         },
     },
     "3": {
-        "name": "Persona 3: Healthcare & Biotechnology Researcher",
+        "name": "Profile 3: Healthcare, Medicine & Biomedical Research",
         "interests": {
-            "realistic": 2.0,
-            "investigative": 5.0,
-            "artistic": 1.0,
+            "practical": 1.5,
+            "analytical": 5.0,
+            "creative": 0.5,
             "social": 4.5,
-            "enterprising": 1.5,
-            "conventional": 3.0,
+            "business": 1.5,
+            "organized": 2.5,
         },
         "skills": {
             "Science": 3.5,
             "Critical Thinking": 3.0,
             "Reading Comprehension": 3.5,
-            "Mathematics": 2.0,
+            "Mathematics": 2.5,
             "Active Listening": 3.5,
-            "Active Learning": 3.0,
         },
     },
 }
@@ -101,16 +99,17 @@ def get_interests_interactive():
     print("\nRate your interests from 0 to 5.")
     print("0 = Not interested, 5 = Very interested")
 
-    for number, name in INTERESTS.items():
-        print(f"  {number}. {name.title()}")
+    for number, (_, label) in INTERESTS.items():
+        print(f"  {number}. {label}")
 
     selected = {}
-    for number, name in INTERESTS.items():
+    for number, (key, label) in INTERESTS.items():
+        short_title = label.split("(")[0].strip()
         while True:
             try:
-                value = float(input(f"  {name.title()} (0-5): "))
+                value = float(input(f"  {short_title} (0-5): "))
                 if 0 <= value <= 5:
-                    selected[name] = value
+                    selected[key] = value
                     break
                 print("  Enter a number between 0 and 5.")
             except ValueError:
@@ -142,7 +141,7 @@ def get_skills_interactive():
 
 
 def run_pipeline(interests, skills, auto_choice=1):
-    print("\n[AI Agent] Analyzing student profile using Holland RIASEC model & Skill Matrix...")
+    print("\n[CareerCompass] Matching student profile using Nearest Neighbors & Random Forest Classifier...")
     recommendations = recommend_careers(
         interests=interests,
         skills=skills,
@@ -150,19 +149,17 @@ def run_pipeline(interests, skills, auto_choice=1):
     )
 
     print("\n" + "=" * 70)
-    print("TOP CAREER RECOMMENDATIONS (Ranked by Match Score & Supervised ML Job Zone)")
+    print("TOP CAREER RECOMMENDATIONS (Ranked by Match Score)")
     print("=" * 70)
     for index, row in recommendations.iterrows():
-        pred_zone = row.get("Predicted Job Zone", "N/A")
         print(
-            f"  {index + 1}. {row['Title']:<38} | "
-            f"Job Zone: {row['Job Zone']} (ML Pred: {pred_zone}) | "
+            f"  {index + 1}. {row['Title']:<48} | "
             f"Match: {row['Match Score (%)']:.1f}%"
         )
 
     if auto_choice is not None and 1 <= auto_choice <= len(recommendations):
         choice = auto_choice
-        print(f"\n[AI Agent] Auto-selected Top Career Match #{choice}: {recommendations.iloc[choice - 1]['Title']}")
+        print(f"\n[CareerCompass] Selected Career #{choice}: {recommendations.iloc[choice - 1]['Title']}")
     else:
         while True:
             try:
@@ -192,8 +189,8 @@ def run_pipeline(interests, skills, auto_choice=1):
 
 def main():
     parser = argparse.ArgumentParser(description="CareerCompass AI Advisor CLI & Demo")
-    parser.add_argument("--demo", action="store_true", help="Run automated agent demo using Persona 1")
-    parser.add_argument("--persona", choices=["1", "2", "3"], help="Run preset student persona (1, 2, or 3)")
+    parser.add_argument("--demo", action="store_true", help="Run automated agent demo using Profile 1")
+    parser.add_argument("--persona", choices=["1", "2", "3"], help="Run preset profile (1, 2, or 3)")
     args = parser.parse_args()
 
     print("=" * 70)
@@ -216,12 +213,11 @@ def main():
             print("\nCareerCompass session complete.")
             return
 
-        # Interactive Mode selection
         print("\nSelect an option:")
         print("  1. Interactive Questionnaire (Input custom interests and skills)")
-        print("  2. Demo Profile 1: Computer Science & AI Aspirant")
-        print("  3. Demo Profile 2: Digital Media & Creative Game Designer")
-        print("  4. Demo Profile 3: Healthcare & Biotechnology Researcher")
+        print("  2. Demo Profile 1: Computer Science, Data Systems & AI")
+        print("  3. Demo Profile 2: Visual Arts & Creative Design")
+        print("  4. Demo Profile 3: Healthcare, Medicine & Biomedical Research")
 
         mode = input("\nEnter choice (1-4, default 1): ").strip()
 
