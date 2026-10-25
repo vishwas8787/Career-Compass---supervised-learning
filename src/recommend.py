@@ -72,8 +72,10 @@ def validate_ratings(ratings, label):
     return validated
 
 
+
+
 def calculate_interest_scores(profiles, interests):
-    """Calculate career-interest similarity scores on a 0–100 scale."""
+    """Calculate career-interest similarity using cosine similarity."""
     interest_columns = {
         name: column
         for name, column in INTEREST_COLUMNS.items()
@@ -84,6 +86,7 @@ def calculate_interest_scores(profiles, interests):
         raise ValueError("At least one interest rating is required.")
 
     columns = list(interest_columns.values())
+
     user_vector = np.array(
         [interests[name] for name in interest_columns],
         dtype=float,
@@ -97,6 +100,7 @@ def calculate_interest_scores(profiles, interests):
     career_norms = np.linalg.norm(career_matrix, axis=1)
 
     scores = np.zeros(len(profiles), dtype=float)
+
     valid = (
         np.isfinite(career_matrix).all(axis=1)
         & (career_norms > 0)

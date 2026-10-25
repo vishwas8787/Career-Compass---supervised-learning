@@ -55,8 +55,6 @@ def get_interests():
 
     return selected
 
-
-
 def get_skills():
     print("\nRate your current skills from 0 to 5.")
     print("0 = No experience, 5 = Very proficient")

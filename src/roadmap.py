@@ -8,191 +8,327 @@ DATA_FILE = PROJECT_ROOT / "data" / "processed" / "occupation_features.csv"
 
 
 def load_profiles():
-    """Load the processed occupation dataset."""
+    """Load occupation profiles containing O*NET requirements."""
     if not DATA_FILE.exists():
         raise FileNotFoundError(
-            f"Occupation features not found: {DATA_FILE}\n"
-            "Run preprocessing and feature engineering first."
+            f"Occupation profiles not found: {DATA_FILE}"
         )
 
     return pd.read_csv(DATA_FILE)
 
 
 def find_occupation(profiles, occupation_code=None, title=None):
-    """Find an occupation using its O*NET code or title."""
+    """Find an occupation by its O*NET code or title."""
     if occupation_code is not None:
         matches = profiles[
-            profiles["O*NET-SOC Code"].astype(str).str.strip()
-            == str(occupation_code).strip()
+            profiles["O*NET-SOC Code"].astype(str)
+            == str(occupation_code)
         ]
     elif title is not None:
         matches = profiles[
             profiles["Title"].astype(str).str.casefold()
-            == str(title).strip().casefold()
+            == str(title).casefold()
         ]
     else:
         raise ValueError("Provide an occupation code or title.")
 
     if matches.empty:
-        raise ValueError(
-            f"Occupation not found: {occupation_code or title}"
-        )
+        raise ValueError("Occupation not found.")
 
     return matches.iloc[0]
 
 
 def validate_student_skills(student_skills):
-    """Validate supplied skill ratings without inventing missing ratings."""
+    """Validate skill ratings supplied by the student."""
     validated = {}
 
-    for name, value in student_skills.items():
-        skill_name = str(name).strip()
-
+    for name, rating in (student_skills or {}).items():
         try:
-            rating = float(value)
+            rating = float(rating)
         except (TypeError, ValueError):
             raise ValueError(
-                f"Rating for '{skill_name}' must be a number from 0 to 5."
+                f"Skill rating for '{name}' must be numeric."
             )
 
         if not 0 <= rating <= 5:
             raise ValueError(
-                f"Rating for '{skill_name}' must be between 0 and 5."
+                f"Skill rating for '{name}' must be between 0 and 5."
             )
 
-        validated[skill_name.casefold()] = (skill_name, rating)
+        validated[name.strip()] = rating
 
     return validated
 
 
-
 def get_skill_gaps(occupation, student_skills):
-    """Compare rated student skills with occupation requirements."""
+    """Rank skill gaps using the occupation's actual O*NET requirements."""
     gaps = []
 
-    for skill_name, student_rating in student_skills.items():
-        column = f"skill_{skill_name}"
+    # Match skill names without depending on capitalization.
+    occupation_columns = {
+        str(column).casefold(): column
+        for column in occupation.index
+    }
 
-        if column not in occupation.index:
+    for skill_name, student_rating in student_skills.items():
+        key = f"skill_{skill_name}".casefold()
+        column = occupation_columns.get(key)
+
+        if column is None:
             continue
 
-        requirement = occupation[column]
+        requirement = pd.to_numeric(
+            occupation[column], errors="coerce"
+        )
 
-        # Ignore missing occupation requirements.
         if pd.isna(requirement):
             continue
 
-        current = float(student_rating)
-        required = float(requirement)
-        gap = max(required - current, 0.0)
+        requirement = float(requirement)
+        gap = max(requirement - student_rating, 0.0)
 
         if gap > 0:
             gaps.append({
                 "skill": skill_name,
-                "current": current,
-                "importance": required,
+                "current": student_rating,
+                "importance": requirement,
                 "gap": gap,
+                "priority": gap * requirement,
             })
 
     gaps.sort(
-    key=lambda item: item["gap"] * item["importance"],
-    reverse=True,
-)
+        key=lambda item: item["priority"],
+        reverse=True,
+    )
 
     return gaps
 
 
-def get_project_suggestions(title):
-    """Suggest practical projects relevant to the selected career."""
-    career = str(title).casefold()
+def get_knowledge_areas(occupation, top_n=5):
+    """Identify the occupation's highest-rated O*NET knowledge areas."""
+    areas = []
 
-    if any(word in career for word in (
-        "video game", "game designer", "game developer"
-    )):
-        return [
-            "Build a small playable game with a clear objective and win/loss conditions.",
-            "Create a prototype level and document its mechanics, pacing, and layout.",
-            "Run playtests, record feedback, and improve the design based on results.",
-        ]
+    for column in occupation.index:
+        if not str(column).startswith("knowledge_"):
+            continue
 
-    if any(word in career for word in (
-        "web", "digital interface", "user interface"
-    )):
-        return [
-            "Design and build a responsive website or interactive prototype.",
-            "Test the interface with users and improve confusing interactions.",
-            "Publish the project with screenshots, design decisions, and source code.",
-        ]
+        value = pd.to_numeric(
+            occupation[column], errors="coerce"
+        )
 
-    if any(word in career for word in (
-        "software", "computer", "database", "systems analyst"
-    )):
-        return [
-            "Build a working application that solves a clearly defined problem.",
-            "Add tests, handle errors, and document the system's design.",
-            "Publish the project with setup instructions and a short demonstration.",
-        ]
+        if pd.isna(value):
+            continue
 
-    if "designer" in career or "architect" in career:
-        return [
-            "Create a portfolio project that solves a specific user or client problem.",
-            "Produce sketches or prototypes and explain the design decisions.",
-            "Gather feedback and present an improved final version.",
-        ]
+        areas.append({
+            "name": str(column)[len("knowledge_"):],
+            "importance": float(value),
+        })
 
-    if "geographer" in career:
-        return [
-            "Create a map-based project using a geographic dataset.",
-            "Analyse a spatial pattern and explain the findings with visualisations.",
-            "Document your data sources, methods, limitations, and conclusions.",
-        ]
+    areas.sort(
+        key=lambda item: item["importance"],
+        reverse=True,
+    )
 
-    return [
-        "Complete a small project that applies skills relevant to this occupation.",
-        "Build a larger project that demonstrates independent problem-solving.",
-        "Document your methods, results, and design decisions in a portfolio.",
-    ]
+    return areas[:top_n]
 
 
 def get_job_zone_guidance(job_zone):
-    """Give broad preparation guidance based on the O*NET Job Zone."""
+    """Explain the typical preparation associated with a Job Zone."""
+    guidance = {
+        1: [
+            "Focus on basic workplace skills and introductory training.",
+            "Explore entry-level opportunities and practical experience.",
+        ],
+        2: [
+            "Consider a high-school qualification or equivalent preparation.",
+            "Build skills through practical training and supervised experience.",
+        ],
+        3: [
+            "Consider vocational training, relevant coursework, or an apprenticeship.",
+            "Practise core occupational skills through structured projects.",
+        ],
+        4: [
+            "Consider relevant higher education or substantial specialised training.",
+            "Build a portfolio of projects demonstrating applied competence.",
+        ],
+        5: [
+            "Investigate advanced education and extensive specialised preparation.",
+            "Develop advanced practical or research experience in the field.",
+        ],
+    }
+
     try:
         zone = int(float(job_zone))
     except (TypeError, ValueError):
-        zone = None
-
-    guidance = {
-        1: "Focus on basic workplace preparation, introductory training, and supervised practice.",
-        2: "Build foundational knowledge through short-term training and practical experience.",
-        3: "Develop specialised skills through relevant courses, training, and hands-on projects.",
-        4: "Consider relevant higher education, advanced coursework, and substantial practical projects.",
-        5: "Plan for extensive specialised education or training and advanced practical experience.",
-    }
+        zone = 0
 
     return guidance.get(
         zone,
-        "Review current job descriptions and identify the education and training commonly required."
+        ["Research the education and training commonly required for this occupation."],
     )
 
 
+def get_project_suggestions(title):
+    """Return practical projects tailored to the occupation."""
+    title = str(title).casefold()
+
+    if any(word in title for word in (
+        "dancer", "choreographer"
+    )):
+        return [
+            "Create and record a short choreography sequence with a clear theme.",
+            "Practise a chosen dance technique and document improvement over several weeks.",
+            "Perform or rehearse a routine, review the recording, and refine timing and movement.",
+        ]
+
+    if any(word in title for word in (
+        "fine artist", "illustrator", "painter", "sculptor"
+    )):
+        return [
+            "Create a themed collection of three original artworks.",
+            "Experiment with different techniques and document the results.",
+            "Assemble a portfolio explaining the concept and process behind each work.",
+        ]
+
+    if any(word in title for word in (
+        "model", "fashion model"
+    )):
+        return [
+            "Build a professional portfolio with varied poses, expressions, and styling.",
+            "Practise movement, posture, and presenting garments on camera.",
+            "Review test-shoot feedback and create an improved portfolio selection.",
+        ]
+
+    if any(word in title for word in (
+        "makeup artist", "make-up artist"
+    )):
+        return [
+            "Create looks for different occasions and document each with photographs.",
+            "Practise colour matching, blending, and hygiene procedures.",
+            "Build a portfolio showing different styles and the techniques used.",
+        ]
+
+    if any(word in title for word in (
+        "tailor", "dressmaker", "sewer"
+    )):
+        return [
+            "Produce a simple garment from measurements and a pattern.",
+            "Practise alterations and document the fitting and finishing process.",
+            "Create a small portfolio showing construction quality and finished garments.",
+        ]
+
+    if any(word in title for word in (
+        "data scientist", "statistician", "biostatistician",
+        "quantitative analyst", "econometrician"
+    )):
+        return [
+            "Choose a real dataset, clean it, and conduct exploratory data analysis.",
+            "Build and evaluate a statistical or machine-learning model using appropriate metrics.",
+            "Present findings with visualisations, limitations, and reproducible code.",
+        ]
+
+    if any(word in title for word in (
+        "software developer", "software engineer",
+        "web developer", "computer programmer"
+    )):
+        return [
+            "Build a working application that solves a specific problem.",
+            "Add input validation, automated checks, and clear documentation.",
+            "Publish the project with setup instructions and examples of its use.",
+        ]
+
+    if any(word in title for word in (
+        "research scientist", "microbiologist",
+        "epidemiologist", "researcher"
+    )):
+        return [
+            "Choose a focused research question and review relevant published studies.",
+            "Analyse an appropriate dataset or design a safe, feasible investigation.",
+            "Write a report covering methods, results, limitations, and conclusions.",
+        ]
+
+    if any(word in title for word in (
+        "teacher", "instructor", "educator"
+    )):
+        return [
+            "Prepare a lesson plan with measurable learning objectives.",
+            "Create a learning activity and a short assessment for those objectives.",
+            "Use feedback or assessment results to revise the lesson.",
+        ]
+
+    if any(word in title for word in (
+        "nurse", "physician", "doctor", "therapist",
+        "medical", "healthcare"
+    )):
+        return [
+            "Study a relevant clinical or professional case using reputable educational resources.",
+            "Practise applicable knowledge through supervised training or approved simulations.",
+            "Prepare a case-based summary that explains decisions and relevant safety considerations.",
+        ]
+
+    if any(word in title for word in (
+        "engineer", "engineering", "architect"
+    )):
+        return [
+            "Design a small solution to a realistic technical problem.",
+            "Create a prototype or simulation and evaluate it against stated requirements.",
+            "Document design choices, test results, limitations, and improvements.",
+        ]
+
+    if any(word in title for word in (
+        "financial", "accountant", "economist", "auditor"
+    )):
+        return [
+            "Analyse a sample financial or economic dataset.",
+            "Prepare a report explaining trends, assumptions, and calculations.",
+            "Compare alternative scenarios and explain their potential implications.",
+        ]
+
+    if any(word in title for word in (
+        "designer", "graphic", "multimedia", "animator"
+    )):
+        return [
+            "Create a focused design project with a defined audience and objective.",
+            "Produce several concepts and explain the reasoning behind the final choice.",
+            "Collect feedback, revise the design, and document the final portfolio piece.",
+        ]
+
+    if any(word in title for word in (
+        "counselor", "counsellor", "social worker"
+    )):
+        return [
+            "Study a relevant professional case using ethical practice guidelines.",
+            "Practise communication and assessment scenarios through approved training.",
+            "Reflect on a simulated case and identify appropriate support or referral options.",
+        ]
+
+    return [
+        f"Research the main responsibilities and required skills of {title}.",
+        "Complete a small practical project demonstrating one important occupational skill.",
+        "Review the result against relevant professional expectations and document improvements.",
+    ]
+
+
 def generate_roadmap(occupation, student_skills):
-    """Generate a career roadmap from occupation data and rated skills."""
-    gaps = get_skill_gaps(occupation, student_skills)
-    title = occupation["Title"]
-    job_zone = occupation.get("Job Zone", "Not available")
+    """Build a personalised roadmap from occupation requirements and ratings."""
+    student_skills = validate_student_skills(student_skills)
+
+    title = str(occupation["Title"])
+    job_zone = occupation.get("Job Zone")
 
     return {
         "title": title,
-        "code": occupation.get("O*NET-SOC Code", "Not available"),
+        "code": occupation["O*NET-SOC Code"],
         "job_zone": job_zone,
         "education_guidance": get_job_zone_guidance(job_zone),
-        "gaps": gaps,
+        "gaps": get_skill_gaps(occupation, student_skills),
+        "knowledge_areas": get_knowledge_areas(occupation),
         "projects": get_project_suggestions(title),
     }
 
 
 def print_roadmap(roadmap):
-    """Display the generated roadmap."""
+    """Display the career-specific roadmap."""
     print("\n" + "=" * 60)
     print(f"CAREER ROADMAP: {roadmap['title']}")
     print("=" * 60)
@@ -200,52 +336,60 @@ def print_roadmap(roadmap):
     print(f"O*NET Job Zone: {roadmap['job_zone']}")
 
     print("\n1. Education and foundations")
-    print(f"  - {roadmap['education_guidance']}")
-    print("  - Compare course options with the requirements in current job postings.")
+    for item in roadmap["education_guidance"]:
+        print(f"  - {item}")
 
     print("\n2. Skill development")
-    if roadmap["gaps"]:
-        print("  Priority skill gaps among the skills you rated:")
-        for item in roadmap["gaps"]:
+    gaps = roadmap["gaps"]
+
+    if gaps:
+        print("  Priority gaps based on your ratings and occupation requirements:")
+        for item in gaps[:5]:
             print(
                 f"  - {item['skill']}: current={item['current']:.1f}, "
                 f"importance={item['importance']:.2f}, "
                 f"gap={item['gap']:.2f}"
             )
-    else:
-        print("  - No gaps were identified among the skills you rated.")
-        print("  - Rate additional relevant skills to get a more complete comparison.")
+    elif roadmap.get("gaps") == []:
+        print("  No gaps found among the skills you rated and the available requirements.")
 
-    print("\n3. Practical experience")
+    print("\n3. Knowledge to develop")
+    areas = roadmap["knowledge_areas"]
+
+    if areas:
+        for area in areas:
+            print(
+                f"  - {area['name']} "
+                f"(O*NET rating: {area['importance']:.2f})"
+            )
+        print("  These are occupation-level priorities, not an assessment of your current knowledge.")
+    else:
+        print("  No knowledge ratings are available for this occupation.")
+
+    print("\n4. Practical projects")
     for project in roadmap["projects"]:
         print(f"  - {project}")
 
-    print("\n4. Career preparation")
-    print("  - Build a portfolio showing your most relevant projects.")
-    print("  - Review entry-level job descriptions and note recurring requirements.")
-    print("  - Prepare a resume that demonstrates your skills with concrete examples.")
-    print("  - Practise explaining your projects and problem-solving decisions.")
+    print("\n5. Career preparation")
+    print("  - Compare these priorities with current job or training descriptions.")
+    print("  - Record evidence of your progress and update your portfolio.")
+    print("  - Reassess your skills as you complete relevant practice.")
 
 
 def main():
     profiles = load_profiles()
-
     occupation = find_occupation(
         profiles,
-        title="Video Game Designers"
+        title="Video Game Designers",
     )
 
     student_skills = {
-        "Active Learning": 3,
-        "Active Listening": 3,
-        "Critical Thinking": 2,
-        "Mathematics": 4,
-        "Reading Comprehension": 4,
-        "Science": 4,
         "Speaking": 0,
-        "Writing": 4,
-        "Monitoring": 3,
+        "Critical Thinking": 2,
+        "Active Listening": 3,
         "Learning Strategies": 2,
+        "Active Learning": 3,
+        "Monitoring": 3,
     }
 
     roadmap = generate_roadmap(occupation, student_skills)
