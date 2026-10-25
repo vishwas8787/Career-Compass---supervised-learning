@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+
+# Generated model files
+models/
+*.pkl
+*.joblib
+
+# Raw and processed datasets
+data/raw/
+data/processed/
+data/all datasets/
+
+# IDE settings
+.vscode/
