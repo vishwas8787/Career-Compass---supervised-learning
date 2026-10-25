@@ -115,6 +115,34 @@ def main():
 
     profiles = build_occupation_profiles()
 
+    print("\nTop 15 columns with the most missing values:")
+    print(
+        profiles.isna().sum()
+        .sort_values(ascending=False)
+        .head(15)
+        .to_string()
+    )
+
+    print("\nPercentage of occupations with any missing features:")
+    feature_columns = [
+        col for col in profiles.columns
+        if col.startswith(("skill_", "knowledge_", "interest_"))
+    ]
+
+    print(
+        f"{profiles[feature_columns].isna().any(axis=1).mean() * 100:.2f}%"
+    )
+
+    print("\nOccupations with the most missing features:")
+    print(
+        profiles.assign(
+            missing_features=profiles[feature_columns].isna().sum(axis=1)
+        )[["Title", "missing_features"]]
+        .sort_values("missing_features", ascending=False)
+        .head(10)
+        .to_string(index=False)
+    )
+
     output_path = PROCESSED_DIR / "occupation_profiles.csv"
     profiles.to_csv(output_path, index=False)
 
