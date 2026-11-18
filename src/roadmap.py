@@ -1,18 +1,9 @@
-"""
-Roadmap generation module for CareerCompass.
-Generates multi-step, domain-specific educational roadmaps:
-(Courses -> Skills -> Projects -> Career)
-Course: CSE395 Supervised Learning
-"""
-
 from pathlib import Path
 import pandas as pd
-
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROFILES_FILE = PROJECT_ROOT / "data" / "processed" / "occupation_profiles.csv"
 FEATURES_FILE = PROJECT_ROOT / "data" / "processed" / "occupation_features.csv"
-
 
 # ==============================================================================
 # DOMAIN-SPECIFIC CURRICULUM CATALOGS (NO VENDOR/LANGUAGE VERSIONS OR CODE CODES)

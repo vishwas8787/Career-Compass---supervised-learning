@@ -1,9 +1,3 @@
-"""
-CareerCompass - Career & Education Advisor
-Command-line Interface & Agent Demo
-Course: CSE395 Supervised Learning
-"""
-
 import argparse
 from src.recommend import recommend_careers
 from src.roadmap import (

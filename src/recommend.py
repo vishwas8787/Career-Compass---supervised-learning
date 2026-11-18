@@ -1,11 +1,3 @@
-"""
-Career recommendation module for CareerCompass.
-Matches student interest and skill profiles to occupations using Scikit-Learn
-K-Nearest Neighbors (KNN) distance and predicts preparation levels using
-a trained Random Forest Classifier.
-Course: CSE395 Supervised Learning
-"""
-
 from pathlib import Path
 import joblib
 import numpy as np

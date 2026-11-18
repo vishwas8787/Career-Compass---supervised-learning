@@ -1,8 +1,3 @@
-"""
-Generates 3 diverse sample roadmaps as required by the CareerCompass deliverables.
-Saves structured Markdown roadmaps to outputs/sample_roadmaps/.
-"""
-
 from pathlib import Path
 import json
 from src.recommend import recommend_careers

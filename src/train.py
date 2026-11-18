@@ -1,10 +1,3 @@
-"""
-Model training module for CareerCompass.
-Trains a Scikit-Learn RandomForestClassifier to predict Job Zone
-(education/preparation level) from occupational skill, knowledge, and interest features.
-Course: CSE395 Supervised Learning
-"""
-
 import json
 import joblib
 from pathlib import Path
