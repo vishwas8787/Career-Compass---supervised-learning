@@ -78,6 +78,6 @@ Evaluation results are saved in `outputs/`:
 
 ## Academic Context
 
-- **Course:** CSE395 Supervised Learning
+- **Course:** INT395 Supervised Learning
 - **Institution:** Lovely Professional University (LPU)
 - **Dataset:** O*NET Database
